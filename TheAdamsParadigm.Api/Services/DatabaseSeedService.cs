@@ -1,5 +1,6 @@
 using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace TheAdamsParadigm.Api.Services
 {
@@ -18,11 +19,11 @@ namespace TheAdamsParadigm.Api.Services
         {
             try
             {
-                // Ensure the database is created
-                await _context.Database.EnsureCreatedAsync();
+                // Ensure migrations are applied (preferred over EnsureCreated in apps using migrations)
+                await _context.Database.MigrateAsync();
 
                 // Seed services if they don't exist
-                if (!_context.Services.Any())
+                if (!await _context.Services.AnyAsync())
                 {
                     _logger.LogInformation("Seeding services into the database...");
                     var services = GetServiceSeedData();
