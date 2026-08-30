@@ -6,3 +6,4 @@
 /TheAdamsParadigm.Api/obj
 /TheAdamsParadigm.Api/Properties
 *.user
+/TheAdamsParadigm.Api/bin/Debug/net8.0
