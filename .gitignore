@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/TheAdamsParadigm.Api/obj
+/TheAdamsParadigm.Api/Properties
+*.user
