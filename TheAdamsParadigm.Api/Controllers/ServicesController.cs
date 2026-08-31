@@ -6,7 +6,7 @@ using TheAdamsParadigm.Api.Models;
 namespace TheAdamsParadigm.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/services")]
     public class ServicesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -18,7 +18,7 @@ namespace TheAdamsParadigm.Api.Controllers
             _logger = logger;
         }
 
-        [HttpGet]
+        [HttpGet("get-all")]
         public async Task<ActionResult<IEnumerable<Service>>> GetAll()
         {
             _logger.LogInformation("Fetching all services");
