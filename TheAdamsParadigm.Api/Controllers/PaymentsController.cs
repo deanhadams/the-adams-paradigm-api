@@ -1,5 +1,7 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Models;
 using TheAdamsParadigm.Api.Services;
 
@@ -10,12 +12,12 @@ namespace TheAdamsParadigm.Api.Controllers;
 public class PaymentsController : ControllerBase
 {
     private readonly YocoService _yocoService;
-    private readonly OrderStore _orderStore;
+    private readonly ApplicationDbContext _context;
 
-    public PaymentsController(YocoService yocoService, OrderStore orderStore)
+    public PaymentsController(YocoService yocoService, ApplicationDbContext context)
     {
         _yocoService = yocoService;
-        _orderStore = orderStore;
+        _context = context;
     }
 
     [HttpPost("create-checkout")]
@@ -33,22 +35,29 @@ public class PaymentsController : ControllerBase
                 return BadRequest(new { error = "Amount must be greater than zero." });
             }
 
-            var order = new Order
-            {
-                OrderId = request.OrderId,
-                Amount = request.Amount,
-                Currency = "ZAR",
-                Status = "Pending",
-                CreatedAt = DateTime.UtcNow
-            };
-
-            if (!_orderStore.Create(order))
+            if (await _context.Orders.AnyAsync(o => o.OrderId == request.OrderId))
             {
                 return Conflict(new
                 {
                     error = $"Order '{request.OrderId}' already exists."
                 });
             }
+
+            var order = new Order
+            {
+                OrderId = request.OrderId,
+                ServiceId = request.ServiceId,
+                Amount = request.Amount,
+                Currency = "ZAR",
+                Status = "Pending",
+                Name = request.Name,
+                Surname = request.Surname,
+                Email = request.Email,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
 
             var yocoResponse = await _yocoService.CreateCheckoutAsync(
                 request.OrderId,
@@ -60,6 +69,7 @@ public class PaymentsController : ControllerBase
                 .GetString();
 
             order.CheckoutId = checkoutId;
+            await _context.SaveChangesAsync();
 
             return Content(yocoResponse, "application/json");
         }
@@ -96,9 +106,12 @@ public class PaymentsController : ControllerBase
     }
 
     [HttpGet("{orderId}")]
-    public IActionResult GetPaymentStatus(string orderId)
+    public async Task<IActionResult> GetPaymentStatus(string orderId)
     {
-        if (!_orderStore.TryGet(orderId, out var order))
+        var order = await _context.Orders.AsNoTracking()
+            .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+        if (order == null)
         {
             return NotFound(new
             {

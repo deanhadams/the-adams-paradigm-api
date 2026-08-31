@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS orders (
     status TEXT NOT NULL DEFAULT 'Pending',
     checkout_id TEXT,
     payment_id TEXT,
+    name TEXT NOT NULL DEFAULT '',
+    surname TEXT NOT NULL DEFAULT '',
+    email TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     paid_at TIMESTAMP WITHOUT TIME ZONE,
     CONSTRAINT fk_orders_service_id FOREIGN KEY (service_id) REFERENCES services(service_id)

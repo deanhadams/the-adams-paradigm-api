@@ -28,7 +28,6 @@ builder.Services.AddHttpClient<YocoService>(client =>
     client.BaseAddress = new Uri("https://payments.yoco.com/");
 });
 
-builder.Services.AddSingleton<OrderStore>();
 builder.Services.AddSingleton<ProcessedWebhookStore>();
 
 var app = builder.Build();

@@ -1,7 +1,9 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using StandardWebhooks;
 using StandardWebhooks.Diagnostics;
+using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Models;
 using TheAdamsParadigm.Api.Services;
 
@@ -12,16 +14,16 @@ namespace TheAdamsParadigm.Api.Controllers;
 public class WebhooksController : ControllerBase
 {
     private readonly IConfiguration _configuration;
-    private readonly OrderStore _orderStore;
+    private readonly ApplicationDbContext _context;
     private readonly ProcessedWebhookStore _processedWebhookStore;
 
     public WebhooksController(
         IConfiguration configuration,
-        OrderStore orderStore,
+        ApplicationDbContext context,
         ProcessedWebhookStore processedWebhookStore)
     {
         _configuration = configuration;
-        _orderStore = orderStore;
+        _context = context;
         _processedWebhookStore = processedWebhookStore;
     }
 
@@ -102,8 +104,8 @@ public class WebhooksController : ControllerBase
                 var checkoutId = payment.Metadata.CheckoutId;
                 var paymentId = payment.Id;
 
-                var order = _orderStore.GetAll()
-                    .FirstOrDefault(x => x.CheckoutId == checkoutId);
+                var order = await _context.Orders
+                    .FirstOrDefaultAsync(x => x.CheckoutId == checkoutId);
 
                 if (order == null)
                 {
@@ -115,10 +117,14 @@ public class WebhooksController : ControllerBase
                     });
                 }
 
-                _orderStore.MarkAsPaid(
-                    order.OrderId,
-                    paymentId,
-                    checkoutId);
+                if (order.Status != "Paid")
+                {
+                    order.Status = "Paid";
+                    order.PaymentId = paymentId;
+                    order.CheckoutId = checkoutId;
+                    order.PaidAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                }
 
                 _processedWebhookStore.TryMarkAsProcessed(webhookEvent.Id);
 
@@ -138,8 +144,8 @@ public class WebhooksController : ControllerBase
                 var checkoutId = payment.Metadata.CheckoutId;
                 var paymentId = payment.Id;
 
-                var order = _orderStore.GetAll()
-                    .FirstOrDefault(x => x.CheckoutId == checkoutId);
+                var order = await _context.Orders
+                    .FirstOrDefaultAsync(x => x.CheckoutId == checkoutId);
 
                 if (order == null)
                 {
@@ -151,10 +157,13 @@ public class WebhooksController : ControllerBase
                     });
                 }
 
-                _orderStore.MarkAsFailed(
-                    order.OrderId,
-                    paymentId,
-                    checkoutId);
+                if (order.Status != "Paid")
+                {
+                    order.Status = "Failed";
+                    order.PaymentId = paymentId;
+                    order.CheckoutId = checkoutId;
+                    await _context.SaveChangesAsync();
+                }
 
                 _processedWebhookStore.TryMarkAsProcessed(webhookEvent.Id);
 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TheAdamsParadigm.Api.Models;
 
 namespace TheAdamsParadigm.Api.Data
@@ -11,6 +12,16 @@ namespace TheAdamsParadigm.Api.Data
 
         public DbSet<Order> Orders { get; set; }
         public DbSet<Service> Services { get; set; }
+
+        // Npgsql rejects Kind=Utc DateTimes against "timestamp without time zone" columns;
+        // strip the Kind on write and re-tag reads as UTC since that's what we always store.
+        private static readonly ValueConverter<DateTime, DateTime> UtcDateTimeConverter = new(
+            v => DateTime.SpecifyKind(v, DateTimeKind.Unspecified),
+            v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+        private static readonly ValueConverter<DateTime?, DateTime?> UtcNullableDateTimeConverter = new(
+            v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Unspecified) : v,
+            v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -31,8 +42,13 @@ namespace TheAdamsParadigm.Api.Data
                 entity.Property(e => e.Status).HasColumnName("status");
                 entity.Property(e => e.CheckoutId).HasColumnName("checkout_id");
                 entity.Property(e => e.PaymentId).HasColumnName("payment_id");
-                entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp without time zone");
-                entity.Property(e => e.PaidAt).HasColumnName("paid_at").HasColumnType("timestamp without time zone");
+                entity.Property(e => e.Name).HasColumnName("name");
+                entity.Property(e => e.Surname).HasColumnName("surname");
+                entity.Property(e => e.Email).HasColumnName("email");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp without time zone")
+                    .HasConversion(UtcDateTimeConverter);
+                entity.Property(e => e.PaidAt).HasColumnName("paid_at").HasColumnType("timestamp without time zone")
+                    .HasConversion(UtcNullableDateTimeConverter);
                 
                 entity.HasOne(e => e.Service)
                     .WithMany(s => s.Orders)
