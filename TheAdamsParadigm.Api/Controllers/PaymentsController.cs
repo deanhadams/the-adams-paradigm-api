@@ -56,8 +56,12 @@ public class PaymentsController : ControllerBase
             var checkoutId = document.RootElement
                 .GetProperty("id")
                 .GetString();
+            var redirectUrl = document.RootElement
+                .GetProperty("redirectUrl")
+                .GetString();
 
             order.CheckoutId = checkoutId;
+            order.PaymentLink = redirectUrl;
             await _context.SaveChangesAsync();
 
             return Content(yocoResponse, "application/json");

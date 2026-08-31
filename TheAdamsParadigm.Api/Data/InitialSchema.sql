@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS orders (
     status TEXT NOT NULL DEFAULT 'Pending',
     checkout_id TEXT,
     payment_id TEXT,
+    payment_link TEXT,
     name TEXT NOT NULL DEFAULT '',
     surname TEXT NOT NULL DEFAULT '',
     email TEXT NOT NULL DEFAULT '',

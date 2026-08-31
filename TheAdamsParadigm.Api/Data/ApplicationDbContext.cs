@@ -42,6 +42,7 @@ namespace TheAdamsParadigm.Api.Data
                 entity.Property(e => e.Status).HasColumnName("status");
                 entity.Property(e => e.CheckoutId).HasColumnName("checkout_id");
                 entity.Property(e => e.PaymentId).HasColumnName("payment_id");
+                entity.Property(e => e.PaymentLink).HasColumnName("payment_link");
                 entity.Property(e => e.Name).HasColumnName("name");
                 entity.Property(e => e.Surname).HasColumnName("surname");
                 entity.Property(e => e.Email).HasColumnName("email");
