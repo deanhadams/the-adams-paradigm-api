@@ -59,12 +59,23 @@ public class PaymentsController : ControllerBase
             var redirectUrl = document.RootElement
                 .GetProperty("redirectUrl")
                 .GetString();
+            var yocoStatus = document.RootElement
+                .GetProperty("status")
+                .GetString();
 
             order.CheckoutId = checkoutId;
             order.PaymentLink = redirectUrl;
             await _context.SaveChangesAsync();
 
-            return Content(yocoResponse, "application/json");
+            return Ok(new CreateCheckoutResponse
+            {
+                OrderId = order.OrderId,
+                CheckoutId = checkoutId,
+                PaymentUrl = redirectUrl,
+                Amount = order.Amount,
+                Currency = order.Currency,
+                YocoStatus = yocoStatus
+            });
         }
         catch (ArgumentException ex)
         {
