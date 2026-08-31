@@ -2,12 +2,8 @@ namespace TheAdamsParadigm.Api.Models
 {
     public class YocoPaymentMethodDetails
     {
-        public string? CardNumber { get; set; }
+        public YocoCardDetails? Card { get; set; }
 
-        public string? CardBrand { get; set; }
-
-        public string? Holder { get; set; }
-
-        public string? ExpiryDate { get; set; }
+        public string Type { get; set; } = string.Empty;
     }
 }

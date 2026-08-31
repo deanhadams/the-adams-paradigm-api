@@ -1,6 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using TheAdamsParadigm.Api.Configuration;
 using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Services;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,13 +20,24 @@ builder.Services.AddSwaggerGen();
 // Register database seeding service
 builder.Services.AddScoped<DatabaseSeedService>();
 
+builder.Services.Configure<YocoSettings>(
+    builder.Configuration.GetSection("Yoco"));
+
+builder.Services.AddHttpClient<YocoService>(client =>
+{
+    client.BaseAddress = new Uri("https://payments.yoco.com/");
+});
+
+builder.Services.AddSingleton<OrderStore>();
+builder.Services.AddSingleton<ProcessedWebhookStore>();
+
 var app = builder.Build();
 
 // Apply migrations and seed database on startup
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var seedService = scope.ServiceProvider.GetRequiredService<DatabaseSeedService>();
+    //var seedService = scope.ServiceProvider.GetRequiredService<DatabaseSeedService>();
     
     try
     {
@@ -33,7 +45,7 @@ using (var scope = app.Services.CreateScope())
         await dbContext.Database.MigrateAsync();
         
         // Seed the database
-        await seedService.SeedDatabaseAsync();
+        //await seedService.SeedDatabaseAsync();
     }
     catch (Exception ex)
     {
