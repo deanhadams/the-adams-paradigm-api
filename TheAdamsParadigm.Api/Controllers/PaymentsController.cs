@@ -25,27 +25,16 @@ public class PaymentsController : ControllerBase
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(request.OrderId))
-            {
-                return BadRequest(new { error = "OrderId is required." });
-            }
-
             if (request.Amount <= 0)
             {
                 return BadRequest(new { error = "Amount must be greater than zero." });
             }
 
-            if (await _context.Orders.AnyAsync(o => o.OrderId == request.OrderId))
-            {
-                return Conflict(new
-                {
-                    error = $"Order '{request.OrderId}' already exists."
-                });
-            }
+            var orderId = Guid.NewGuid().ToString();
 
             var order = new Order
             {
-                OrderId = request.OrderId,
+                OrderId = orderId,
                 ServiceId = request.ServiceId,
                 Amount = request.Amount,
                 Currency = "ZAR",
@@ -60,7 +49,7 @@ public class PaymentsController : ControllerBase
             await _context.SaveChangesAsync();
 
             var yocoResponse = await _yocoService.CreateCheckoutAsync(
-                request.OrderId,
+                orderId,
                 request.Amount);
 
             using var document = JsonDocument.Parse(yocoResponse);

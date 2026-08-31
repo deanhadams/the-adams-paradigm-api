@@ -2,8 +2,6 @@
 {
     public class CreateCheckoutRequest
     {
-        public string OrderId { get; set; } = string.Empty;
-
         public int? ServiceId { get; set; }
 
         public decimal Amount { get; set; }
