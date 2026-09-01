@@ -55,6 +55,14 @@ builder.Services.AddHttpClient<YocoService>(client =>
 
 builder.Services.AddSingleton<ProcessedWebhookStore>();
 
+builder.Services.Configure<ResendSettings>(
+    builder.Configuration.GetSection("Resend"));
+
+builder.Services.AddHttpClient<ResendService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.resend.com/");
+});
+
 var app = builder.Build();
 
 // Apply migrations and seed database on startup

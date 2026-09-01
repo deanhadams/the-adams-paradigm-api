@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from 'react'
-import { CheckCircle2, Loader2, Send, X } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Loader2, Send, X } from 'lucide-react'
 import { budgetOptions, projectTypeOptions } from '../data/contact'
-import { site } from '../data/site'
+import { useContactMessage } from '../hooks/useContactMessage'
 import { cn } from '../lib/cn'
 import { inputClasses } from '../lib/formStyles'
 import { FormField } from './FormField'
@@ -23,7 +23,6 @@ const initialState: FormState = {
 }
 
 type Errors = Partial<Record<keyof FormState, string>>
-type Status = 'idle' | 'submitting' | 'success' | 'error'
 
 interface ContactFormProps {
   contextLabel?: string
@@ -51,7 +50,7 @@ function validate(values: FormState): Errors {
 export function ContactForm({ contextLabel }: ContactFormProps) {
   const [values, setValues] = useState<FormState>(initialState)
   const [errors, setErrors] = useState<Errors>({})
-  const [status, setStatus] = useState<Status>('idle')
+  const { status, error, sendMessage, reset } = useContactMessage()
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setValues((prev) => ({ ...prev, [key]: value }))
@@ -63,29 +62,16 @@ export function ContactForm({ contextLabel }: ContactFormProps) {
     const validationErrors = validate(values)
     setErrors(validationErrors)
 
-    if (Object.keys(validationErrors).length > 0) {
-      setStatus('idle')
-      return
-    }
+    if (Object.keys(validationErrors).length > 0) return
 
-    setStatus('submitting')
-
-    const subject = `${contextLabel ?? 'New project inquiry'} — ${values.name}`
-    const body = [
-      `Name: ${values.name}`,
-      `Email: ${values.email}`,
-      `Project type: ${values.projectType}`,
-      `Budget: ${values.budget || 'Not specified'}`,
-      '',
-      values.message,
-    ].join('\n')
-
-    const mailtoUrl = `mailto:${site.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-
-    window.setTimeout(() => {
-      window.location.href = mailtoUrl
-      setStatus('success')
-    }, 500)
+    void sendMessage({
+      name: values.name.trim(),
+      email: values.email.trim(),
+      projectType: values.projectType,
+      budget: values.budget,
+      message: values.message.trim(),
+      contextLabel,
+    })
   }
 
   if (status === 'success') {
@@ -98,7 +84,7 @@ export function ContactForm({ contextLabel }: ContactFormProps) {
           type="button"
           onClick={() => {
             setValues(initialState)
-            setStatus('idle')
+            reset()
           }}
           aria-label="Dismiss"
           className="absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-full border border-white/15 bg-navy-950/40 text-mist-200/70 transition-colors hover:border-white/30 hover:text-emerald-glow"
@@ -107,16 +93,15 @@ export function ContactForm({ contextLabel }: ContactFormProps) {
         </button>
 
         <CheckCircle2 className="size-10 text-emerald-glow" aria-hidden="true" />
-        <h3 className="text-xl font-bold text-mist-50">Your email client is opening</h3>
+        <h3 className="text-xl font-bold text-mist-50">Message Sent</h3>
         <p className="max-w-sm text-sm leading-relaxed text-mist-200/70">
-          A message addressed to {site.email} has been prepared with your project details. Send it from your email
-          app to complete your inquiry.
+          Thanks, {values.name.trim() || 'there'}. Your message has been sent — I'll get back to you shortly.
         </p>
         <button
           type="button"
           onClick={() => {
             setValues(initialState)
-            setStatus('idle')
+            reset()
           }}
           className="mt-2 text-sm font-semibold text-emerald-glow hover:underline"
         >
@@ -221,6 +206,13 @@ export function ContactForm({ contextLabel }: ContactFormProps) {
         quote.
       </p>
 
+      {status === 'error' && (
+        <p className="flex items-center gap-2 text-sm font-medium text-red-400">
+          <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
+          Couldn't send your message. {error}
+        </p>
+      )}
+
       <button
         type="submit"
         disabled={status === 'submitting'}
@@ -229,7 +221,7 @@ export function ContactForm({ contextLabel }: ContactFormProps) {
         {status === 'submitting' ? (
           <>
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            Preparing message...
+            Sending message...
           </>
         ) : (
           <>
