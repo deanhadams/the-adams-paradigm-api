@@ -96,7 +96,10 @@ export function ContactForm({ contextLabel }: ContactFormProps) {
       >
         <button
           type="button"
-          onClick={() => setStatus('idle')}
+          onClick={() => {
+            setValues(initialState)
+            setStatus('idle')
+          }}
           aria-label="Dismiss"
           className="absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-full border border-white/15 bg-navy-950/40 text-mist-200/70 transition-colors hover:border-white/30 hover:text-emerald-glow"
         >

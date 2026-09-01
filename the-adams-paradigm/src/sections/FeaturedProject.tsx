@@ -17,7 +17,13 @@ export function FeaturedProject() {
 
         <div className="mt-6 grid gap-12 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.025] lg:grid-cols-2">
           <RevealOnScroll delay={80} className="relative min-h-[20rem]">
-            <ProjectVisual slug={featuredProject.slug} accent={featuredProject.accent} className="absolute inset-0" />
+            <ProjectVisual
+              slug={featuredProject.slug}
+              accent={featuredProject.accent}
+              image={featuredProject.image}
+              imageAlt={`${featuredProject.name} website preview`}
+              className="h-full w-full"
+            />
           </RevealOnScroll>
 
           <RevealOnScroll delay={160} className="flex flex-col justify-center p-8 lg:p-12">
