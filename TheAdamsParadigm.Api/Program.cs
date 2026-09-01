@@ -22,7 +22,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(FrontendCorsPolicy, policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins(
+                "http://localhost:5173",
+                "https://glorious-enchantment-production-22d8.up.railway.app")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
