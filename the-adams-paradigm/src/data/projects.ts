@@ -25,6 +25,8 @@ export const projects: Project[] = [
     highlights: ['Game logic', 'Interactive UI', 'Football data', 'Responsive design', 'User engagement'],
     tags: ['React', 'TypeScript', 'Game Logic', 'Responsive UI'],
     accent: 'emerald',
+    url: 'https://lineup-legends.vercel.app/',
+    image: 'https://pub-26d0794de3654ed6a3b6ada1126ee4b0.r2.dev/projects/lineup-legends.png',
     featured: {
       challenge:
         'Turn static football trivia into a genuinely replayable game — one that tests recall against real starting lineups without feeling like a quiz form.',
