@@ -1,9 +1,21 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using TheAdamsParadigm.Api.Configuration;
 using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Railway terminates TLS at its edge and forwards plain HTTP to the container.
+// Without this, UseHttpsRedirection thinks every request is HTTP and 307s to
+// https before CORS middleware runs, which strips CORS headers from preflight
+// responses and gets them blocked by the browser.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Add DbContext with PostgreSQL support
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
@@ -72,6 +84,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseForwardedHeaders();
 
 app.UseHttpsRedirection();
 
