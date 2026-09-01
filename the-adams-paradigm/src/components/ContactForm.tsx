@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react'
-import { CheckCircle2, Loader2, Send } from 'lucide-react'
+import { CheckCircle2, Loader2, Send, X } from 'lucide-react'
 import { budgetOptions, projectTypeOptions } from '../data/contact'
 import { site } from '../data/site'
 import { cn } from '../lib/cn'
@@ -90,7 +90,19 @@ export function ContactForm({ contextLabel }: ContactFormProps) {
 
   if (status === 'success') {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-2xl border border-emerald-glow/30 bg-emerald-glow/[0.06] px-8 py-14 text-center" role="status">
+      <div
+        className="relative flex flex-col items-center gap-4 rounded-2xl border border-emerald-glow/30 bg-emerald-glow/[0.06] px-8 py-14 text-center"
+        role="status"
+      >
+        <button
+          type="button"
+          onClick={() => setStatus('idle')}
+          aria-label="Dismiss"
+          className="absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-full border border-white/15 bg-navy-950/40 text-mist-200/70 transition-colors hover:border-white/30 hover:text-emerald-glow"
+        >
+          <X className="size-4" aria-hidden="true" />
+        </button>
+
         <CheckCircle2 className="size-10 text-emerald-glow" aria-hidden="true" />
         <h3 className="text-xl font-bold text-mist-50">Your email client is opening</h3>
         <p className="max-w-sm text-sm leading-relaxed text-mist-200/70">
