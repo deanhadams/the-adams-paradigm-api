@@ -8,3 +8,4 @@
 *.user
 /TheAdamsParadigm.Api/bin/Debug/net8.0
 /TheAdamsParadigm.Api/bin/Release/net8.0
+/TheAdamsParadigm.Api/appsettings.Development.json
