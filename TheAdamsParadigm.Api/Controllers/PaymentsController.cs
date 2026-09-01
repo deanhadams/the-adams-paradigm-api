@@ -13,11 +13,19 @@ public class PaymentsController : ControllerBase
 {
     private readonly YocoService _yocoService;
     private readonly ApplicationDbContext _context;
+    private readonly ResendService _resendService;
+    private readonly ILogger<PaymentsController> _logger;
 
-    public PaymentsController(YocoService yocoService, ApplicationDbContext context)
+    public PaymentsController(
+        YocoService yocoService,
+        ApplicationDbContext context,
+        ResendService resendService,
+        ILogger<PaymentsController> logger)
     {
         _yocoService = yocoService;
         _context = context;
+        _resendService = resendService;
+        _logger = logger;
     }
 
     [HttpPost("create-checkout")]
@@ -66,6 +74,22 @@ public class PaymentsController : ControllerBase
             order.CheckoutId = checkoutId;
             order.PaymentLink = redirectUrl;
             await _context.SaveChangesAsync();
+
+            try
+            {
+                string? serviceTitle = order.ServiceId.HasValue
+                    ? (await _context.Services.AsNoTracking()
+                        .Where(s => s.ServiceId == order.ServiceId.Value)
+                        .Select(s => s.Title)
+                        .FirstOrDefaultAsync())
+                    : null;
+
+                await _resendService.SendBookingConfirmationAsync(order, serviceTitle);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send booking confirmation emails for order {OrderId}", order.OrderId);
+            }
 
             return Ok(new CreateCheckoutResponse
             {
@@ -125,5 +149,35 @@ public class PaymentsController : ControllerBase
         }
 
         return Ok(order);
+    }
+
+    [HttpPost("{orderId}/test-payment-email")]
+    public async Task<IActionResult> TestPaymentEmail(string orderId)
+    {
+        var order = await _context.Orders.AsNoTracking()
+            .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+        if (order == null)
+        {
+            return NotFound(new
+            {
+                error = "Order not found.",
+                orderId
+            });
+        }
+
+        try
+        {
+            await _resendService.SendPaymentSuccessAsync(order);
+            return Ok(new { success = true });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(502, new
+            {
+                error = "Failed to send payment confirmation email.",
+                details = ex.Message
+            });
+        }
     }
 }

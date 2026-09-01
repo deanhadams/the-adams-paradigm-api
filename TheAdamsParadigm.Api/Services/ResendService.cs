@@ -39,12 +39,72 @@ public class ResendService
             <p>{HtmlEncode(request.Message).Replace("\n", "<br/>")}</p>
             """;
 
+        await SendEmailAsync(_settings.ToEmail, subject, html, replyTo: request.Email);
+    }
+
+    public async Task SendBookingConfirmationAsync(Order order, string? serviceTitle)
+    {
+        var amountLine = $"{order.Amount:F2} {order.Currency}";
+
+        var adminHtml = $"""
+            <p>New booking received.</p>
+            <p><strong>Order ID:</strong> {HtmlEncode(order.OrderId)}</p>
+            <p><strong>Customer:</strong> {HtmlEncode(order.Name)} {HtmlEncode(order.Surname)} ({HtmlEncode(order.Email)})</p>
+            <p><strong>Service:</strong> {HtmlEncode(serviceTitle ?? "Not specified")}</p>
+            <p><strong>Amount:</strong> {amountLine}</p>
+            """;
+
+        await SendEmailAsync(_settings.ToEmail, $"New Booking — {order.OrderId}", adminHtml);
+
+        if (!string.IsNullOrWhiteSpace(order.Email))
+        {
+            var customerHtml = $"""
+                <p>Hi {HtmlEncode(order.Name)},</p>
+                <p>Thanks for booking with The Adams Paradigm! Here's a summary of your order:</p>
+                <p><strong>Order ID:</strong> {HtmlEncode(order.OrderId)}</p>
+                <p><strong>Service:</strong> {HtmlEncode(serviceTitle ?? "Not specified")}</p>
+                <p><strong>Amount:</strong> {amountLine}</p>
+                <p>We'll send you another email once your payment has been confirmed.</p>
+                """;
+
+            await SendEmailAsync(order.Email, "Booking Confirmation — The Adams Paradigm", customerHtml);
+        }
+    }
+
+    public async Task SendPaymentSuccessAsync(Order order)
+    {
+        var amountLine = $"{order.Amount:F2} {order.Currency}";
+
+        var adminHtml = $"""
+            <p>Payment received.</p>
+            <p><strong>Order ID:</strong> {HtmlEncode(order.OrderId)}</p>
+            <p><strong>Customer:</strong> {HtmlEncode(order.Name)} {HtmlEncode(order.Surname)} ({HtmlEncode(order.Email)})</p>
+            <p><strong>Amount:</strong> {amountLine}</p>
+            """;
+
+        await SendEmailAsync(_settings.ToEmail, $"Payment Received — {order.OrderId}", adminHtml);
+
+        if (!string.IsNullOrWhiteSpace(order.Email))
+        {
+            var customerHtml = $"""
+                <p>Hi {HtmlEncode(order.Name)},</p>
+                <p>We've received your payment for order <strong>{HtmlEncode(order.OrderId)}</strong>.</p>
+                <p><strong>Amount:</strong> {amountLine}</p>
+                <p>Thank you for your business!</p>
+                """;
+
+            await SendEmailAsync(order.Email, "Payment Confirmed — The Adams Paradigm", customerHtml);
+        }
+    }
+
+    private async Task SendEmailAsync(string to, string subject, string html, string? replyTo = null)
+    {
         using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "emails");
         httpRequest.Content = JsonContent.Create(new
         {
             from = _settings.FromEmail,
-            to = new[] { _settings.ToEmail },
-            reply_to = request.Email,
+            to = new[] { to },
+            reply_to = replyTo,
             subject,
             html
         });

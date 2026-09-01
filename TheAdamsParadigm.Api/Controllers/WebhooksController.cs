@@ -16,15 +16,21 @@ public class WebhooksController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly ApplicationDbContext _context;
     private readonly ProcessedWebhookStore _processedWebhookStore;
+    private readonly ResendService _resendService;
+    private readonly ILogger<WebhooksController> _logger;
 
     public WebhooksController(
         IConfiguration configuration,
         ApplicationDbContext context,
-        ProcessedWebhookStore processedWebhookStore)
+        ProcessedWebhookStore processedWebhookStore,
+        ResendService resendService,
+        ILogger<WebhooksController> logger)
     {
         _configuration = configuration;
         _context = context;
         _processedWebhookStore = processedWebhookStore;
+        _resendService = resendService;
+        _logger = logger;
     }
 
     [HttpGet("yoco")]
@@ -124,6 +130,15 @@ public class WebhooksController : ControllerBase
                     order.CheckoutId = checkoutId;
                     order.PaidAt = DateTime.UtcNow;
                     await _context.SaveChangesAsync();
+
+                    try
+                    {
+                        await _resendService.SendPaymentSuccessAsync(order);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send payment confirmation emails for order {OrderId}", order.OrderId);
+                    }
                 }
 
                 _processedWebhookStore.TryMarkAsProcessed(webhookEvent.Id);
