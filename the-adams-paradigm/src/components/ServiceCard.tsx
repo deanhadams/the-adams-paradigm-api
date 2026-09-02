@@ -43,6 +43,11 @@ export function ServiceCard({ service }: ServiceCardProps) {
       <div className="relative">
         <h3 className="mt-5 text-lg font-semibold text-mist-50">{service.title}</h3>
         <p className="mt-2 text-sm leading-relaxed text-mist-200/65">{service.description}</p>
+        {service.setupFee > 0 && (
+          <p className="mt-3 text-xs font-medium text-mist-200/50">
+            {currencyFormatter.format(service.setupFee)} setup fee
+          </p>
+        )}
       </div>
     </div>
   )

@@ -12,6 +12,8 @@ namespace TheAdamsParadigm.Api.Models
 
         public decimal CostPerHour { get; set; } = 0.00m;
 
+        public decimal SetupFee { get; set; } = 0.00m;
+
         // Navigation property
         public ICollection<Order> Orders { get; set; } = new List<Order>();
     }

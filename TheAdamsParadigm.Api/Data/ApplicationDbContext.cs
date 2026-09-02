@@ -70,6 +70,7 @@ namespace TheAdamsParadigm.Api.Data
                 entity.Property(e => e.Title).HasColumnName("title");
                 entity.Property(e => e.Description).HasColumnName("description");
                 entity.Property(e => e.CostPerHour).HasColumnName("cost_per_hour").HasPrecision(18, 2);
+                entity.Property(e => e.SetupFee).HasColumnName("setup_fee").HasPrecision(18, 2);
             });
         }
     }

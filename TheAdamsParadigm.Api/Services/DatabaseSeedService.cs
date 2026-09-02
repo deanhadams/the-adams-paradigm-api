@@ -52,70 +52,88 @@ namespace TheAdamsParadigm.Api.Services
                     Icon = "Layers",
                     Title = "Full-Stack Web Development",
                     Description = "Modern responsive applications built around real business requirements.",
-                    CostPerHour = 120.00m
+                    CostPerHour = 120.00m,
+                    SetupFee = 500.00m
                 },
                 new Service
                 {
                     Icon = "Wrench",
                     Title = "Custom Software",
                     Description = "Purpose-built applications designed around a company's workflow.",
-                    CostPerHour = 150.00m
+                    CostPerHour = 150.00m,
+                    SetupFee = 500.00m
                 },
                 new Service
                 {
                     Icon = "Plug",
                     Title = "API Development",
                     Description = "Secure and maintainable APIs and backend systems.",
-                    CostPerHour = 110.00m
+                    CostPerHour = 110.00m,
+                    SetupFee = 500.00m
                 },
                 new Service
                 {
                     Icon = "Atom",
                     Title = "React Applications",
                     Description = "Fast, modern and interactive frontend experiences.",
-                    CostPerHour = 100.00m
+                    CostPerHour = 100.00m,
+                    SetupFee = 500.00m
                 },
                 new Service
                 {
                     Icon = "Server",
                     Title = "ASP.NET / C# Development",
                     Description = "Robust backend systems using modern Microsoft technologies.",
-                    CostPerHour = 130.00m
+                    CostPerHour = 130.00m,
+                    SetupFee = 500.00m
                 },
                 new Service
                 {
                     Icon = "Database",
                     Title = "Database Solutions",
                     Description = "SQL Server and application data architecture.",
-                    CostPerHour = 140.00m
+                    CostPerHour = 140.00m,
+                    SetupFee = 500.00m
                 },
                 new Service
                 {
                     Icon = "CreditCard",
                     Title = "Payment Integrations",
                     Description = "Payment workflows and third-party payment integrations.",
-                    CostPerHour = 125.00m
+                    CostPerHour = 125.00m,
+                    SetupFee = 500.00m
                 },
                 new Service
                 {
                     Icon = "CalendarClock",
                     Title = "Booking & Scheduling",
                     Description = "Booking systems, availability logic, payments and confirmations.",
-                    CostPerHour = 95.00m
+                    CostPerHour = 95.00m,
+                    SetupFee = 500.00m
                 },
                 new Service
                 {
                     Icon = "Sparkles",
                     Title = "AI-Powered Applications",
                     Description = "Practical AI integrations and intelligent application features.",
-                    CostPerHour = 160.00m
+                    CostPerHour = 160.00m,
+                    SetupFee = 500.00m
                 },
                 new Service
                 {
                     Icon = "CloudCog",
                     Title = "Cloud & Deployment",
                     Description = "Taking applications from development into reliable production environments.",
-                    CostPerHour = 135.00m
+                    CostPerHour = 100.00m,
+                    SetupFee = 500.00m
+                },
+                new Service
+                {
+                    Icon = "Globe",
+                    Title = "Basic Website",
+                    Description = "3 pages, no integrations.",
+                    CostPerHour = 100.00m,
+                    SetupFee = 2500.00m
                 }
             };
         }

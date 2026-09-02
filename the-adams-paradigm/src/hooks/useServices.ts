@@ -9,6 +9,7 @@ interface ServiceDto {
   title: string
   description: string
   costPerHour: number
+  setupFee: number
 }
 
 interface UseServicesResult {
@@ -42,6 +43,7 @@ export function useServices(): UseServicesResult {
             title: dto.title,
             description: dto.description,
             costPerHour: dto.costPerHour,
+            setupFee: dto.setupFee,
           })),
         )
       } catch (err) {

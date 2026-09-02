@@ -5,6 +5,7 @@ import {
   CloudCog,
   CreditCard,
   Database,
+  Globe,
   Layers,
   Plug,
   Server,
@@ -18,6 +19,7 @@ export interface Service {
   title: string
   description: string
   costPerHour: number
+  setupFee: number
 }
 
 export const serviceIconMap: Record<string, LucideIcon> = {
@@ -31,6 +33,7 @@ export const serviceIconMap: Record<string, LucideIcon> = {
   CalendarClock,
   Sparkles,
   CloudCog,
+  Globe,
 }
 
 export const fallbackServiceIcon: LucideIcon = Sparkles
