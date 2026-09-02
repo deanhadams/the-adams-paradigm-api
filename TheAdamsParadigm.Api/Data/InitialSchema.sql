@@ -49,7 +49,7 @@ CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
 -- Insert seed data into services table
 INSERT INTO services (icon, title, description, cost_per_hour, setup_fee)
 VALUES
-('Globe', 'Basic Website', '3 pages, no integrations.', 100.00, 2500.00),
+('Globe', 'Basic Website', 'A polished three-page website built to make a strong first impression — clean, focused design with no added integrations.', 100.00, 2500.00),
 ('Layers', 'Full-Stack Web Development', 'Modern responsive applications built around real business requirements.', 100.00, 500.00),
 ('Wrench', 'Custom Software', 'Purpose-built applications designed around a company''s workflow.', 150.00, 500.00),
 ('Plug', 'API Development', 'Secure and maintainable APIs and backend systems.', 100.00, 500.00),

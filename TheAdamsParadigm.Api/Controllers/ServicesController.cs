@@ -22,7 +22,7 @@ namespace TheAdamsParadigm.Api.Controllers
         public async Task<ActionResult<IEnumerable<Service>>> GetAll()
         {
             _logger.LogInformation("Fetching all services");
-            var services = await _context.Services.AsNoTracking().ToListAsync();
+            var services = await _context.Services.OrderBy(s => s.ServiceId).AsNoTracking().ToListAsync();
             return Ok(services);
         }
     }

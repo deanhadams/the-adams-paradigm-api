@@ -131,7 +131,7 @@ namespace TheAdamsParadigm.Api.Services
                 {
                     Icon = "Globe",
                     Title = "Basic Website",
-                    Description = "3 pages, no integrations.",
+                    Description = "A polished three-page website built to make a strong first impression — clean, focused design with no added integrations.",
                     CostPerHour = 100.00m,
                     SetupFee = 2500.00m
                 }
