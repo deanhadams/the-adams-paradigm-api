@@ -7,6 +7,7 @@ import {
   Database,
   Globe,
   Layers,
+  MessageCircle,
   Plug,
   Server,
   Sparkles,
@@ -34,6 +35,7 @@ export const serviceIconMap: Record<string, LucideIcon> = {
   Sparkles,
   CloudCog,
   Globe,
+  MessageCircle,
 }
 
 export const fallbackServiceIcon: LucideIcon = Sparkles

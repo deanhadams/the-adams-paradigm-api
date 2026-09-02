@@ -134,6 +134,14 @@ namespace TheAdamsParadigm.Api.Services
                     Description = "A polished three-page website built to make a strong first impression — clean, focused design with no added integrations.",
                     CostPerHour = 100.00m,
                     SetupFee = 2500.00m
+                },
+                new Service
+                {
+                    Icon = "MessageCircle",
+                    Title = "Consult",
+                    Description = "One-on-one technical consulting to scope a new project, review an existing system, or plan next steps before committing to a build.",
+                    CostPerHour = 100.00m,
+                    SetupFee = 500.00m
                 }
             };
         }
