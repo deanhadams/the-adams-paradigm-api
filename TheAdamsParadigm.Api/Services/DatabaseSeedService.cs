@@ -53,7 +53,8 @@ namespace TheAdamsParadigm.Api.Services
                     Title = "Full-Stack Web Development",
                     Description = "Modern responsive applications built around real business requirements.",
                     CostPerHour = 120.00m,
-                    SetupFee = 500.00m
+                    SetupFee = 500.00m,
+                    IsBookable = true
                 },
                 new Service
                 {
@@ -61,7 +62,8 @@ namespace TheAdamsParadigm.Api.Services
                     Title = "Custom Software",
                     Description = "Purpose-built applications designed around a company's workflow.",
                     CostPerHour = 150.00m,
-                    SetupFee = 500.00m
+                    SetupFee = 500.00m,
+                    IsBookable = true
                 },
                 new Service
                 {
@@ -69,7 +71,8 @@ namespace TheAdamsParadigm.Api.Services
                     Title = "API Development",
                     Description = "Secure and maintainable APIs and backend systems.",
                     CostPerHour = 110.00m,
-                    SetupFee = 500.00m
+                    SetupFee = 500.00m,
+                    IsBookable = true
                 },
                 new Service
                 {
@@ -77,7 +80,8 @@ namespace TheAdamsParadigm.Api.Services
                     Title = "React Applications",
                     Description = "Fast, modern and interactive frontend experiences.",
                     CostPerHour = 100.00m,
-                    SetupFee = 500.00m
+                    SetupFee = 500.00m,
+                    IsBookable = true
                 },
                 new Service
                 {
@@ -85,7 +89,8 @@ namespace TheAdamsParadigm.Api.Services
                     Title = "ASP.NET / C# Development",
                     Description = "Robust backend systems using modern Microsoft technologies.",
                     CostPerHour = 130.00m,
-                    SetupFee = 500.00m
+                    SetupFee = 500.00m,
+                    IsBookable = true
                 },
                 new Service
                 {
@@ -93,7 +98,8 @@ namespace TheAdamsParadigm.Api.Services
                     Title = "Database Solutions",
                     Description = "SQL Server and application data architecture.",
                     CostPerHour = 140.00m,
-                    SetupFee = 500.00m
+                    SetupFee = 500.00m,
+                    IsBookable = true
                 },
                 new Service
                 {
@@ -101,7 +107,8 @@ namespace TheAdamsParadigm.Api.Services
                     Title = "Payment Integrations",
                     Description = "Payment workflows and third-party payment integrations.",
                     CostPerHour = 125.00m,
-                    SetupFee = 500.00m
+                    SetupFee = 500.00m,
+                    IsBookable = true
                 },
                 new Service
                 {
@@ -109,7 +116,8 @@ namespace TheAdamsParadigm.Api.Services
                     Title = "Booking & Scheduling",
                     Description = "Booking systems, availability logic, payments and confirmations.",
                     CostPerHour = 95.00m,
-                    SetupFee = 500.00m
+                    SetupFee = 500.00m,
+                    IsBookable = true
                 },
                 new Service
                 {
@@ -117,7 +125,8 @@ namespace TheAdamsParadigm.Api.Services
                     Title = "AI-Powered Applications",
                     Description = "Practical AI integrations and intelligent application features.",
                     CostPerHour = 160.00m,
-                    SetupFee = 500.00m
+                    SetupFee = 500.00m,
+                    IsBookable = true
                 },
                 new Service
                 {
@@ -125,7 +134,8 @@ namespace TheAdamsParadigm.Api.Services
                     Title = "Cloud & Deployment",
                     Description = "Taking applications from development into reliable production environments.",
                     CostPerHour = 100.00m,
-                    SetupFee = 500.00m
+                    SetupFee = 500.00m,
+                    IsBookable = true
                 },
                 new Service
                 {
@@ -133,7 +143,8 @@ namespace TheAdamsParadigm.Api.Services
                     Title = "Basic Website",
                     Description = "A polished three-page website built to make a strong first impression — clean, focused design with no added integrations.",
                     CostPerHour = 100.00m,
-                    SetupFee = 2500.00m
+                    SetupFee = 2500.00m,
+                    IsBookable = true
                 },
                 new Service
                 {
@@ -141,7 +152,8 @@ namespace TheAdamsParadigm.Api.Services
                     Title = "Consult",
                     Description = "One-on-one technical consulting to scope a new project, review an existing system, or plan next steps before committing to a build.",
                     CostPerHour = 100.00m,
-                    SetupFee = 500.00m
+                    SetupFee = 500.00m,
+                    IsBookable = true
                 }
             };
         }

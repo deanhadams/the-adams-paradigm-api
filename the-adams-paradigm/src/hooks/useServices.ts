@@ -10,6 +10,7 @@ interface ServiceDto {
   description: string
   costPerHour: number
   setupFee: number
+  isBookable: boolean
 }
 
 interface UseServicesResult {
@@ -44,6 +45,7 @@ export function useServices(): UseServicesResult {
             description: dto.description,
             costPerHour: dto.costPerHour,
             setupFee: dto.setupFee,
+            isBookable: dto.isBookable,
           })),
         )
       } catch (err) {

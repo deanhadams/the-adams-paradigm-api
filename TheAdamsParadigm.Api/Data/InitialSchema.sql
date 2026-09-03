@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS services (
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     cost_per_hour NUMERIC(18,2) NOT NULL DEFAULT 0.00,
-    setup_fee NUMERIC(18,2) NOT NULL DEFAULT 0.00
+    setup_fee NUMERIC(18,2) NOT NULL DEFAULT 0.00,
+    is_bookable BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 -- Create the orders table
@@ -47,20 +48,20 @@ CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
 
 -- Insert seed data into services table
-INSERT INTO services (icon, title, description, cost_per_hour, setup_fee)
+INSERT INTO services (icon, title, description, cost_per_hour, setup_fee, is_bookable)
 VALUES
-('Globe', 'Basic Website', 'A polished three-page website built to make a strong first impression — clean, focused design with no added integrations.', 100.00, 2500.00),
-('Layers', 'Full-Stack Web Development', 'Modern responsive applications built around real business requirements.', 100.00, 500.00),
-('Wrench', 'Custom Software', 'Purpose-built applications designed around a company''s workflow.', 150.00, 500.00),
-('Plug', 'API Development', 'Secure and maintainable APIs and backend systems.', 100.00, 500.00),
-('Atom', 'React Applications', 'Fast, modern and interactive frontend experiences.', 100.00, 500.00),
-('Server', 'ASP.NET / C# Development', 'Robust backend systems using modern Microsoft technologies.', 150.00, 500.00),
-('Database', 'Database Solutions', 'SQL Server and application data architecture.', 100.00, 500.00),
-('CreditCard', 'Payment Integrations', 'Payment workflows and third-party payment integrations.', 150.00, 1500.00),
-('CalendarClock', 'Booking & Scheduling', 'Booking systems, availability logic, payments and confirmations.', 100.00, 500.00),
-('Sparkles', 'AI-Powered Applications', 'Practical AI integrations and intelligent application features.', 200.00, 5000.00),
-('CloudCog', 'Cloud & Deployment', 'Taking applications from development into reliable production environments.', 100.00, 500.00),
-('MessageCircle', 'Consult', 'One-on-one technical consulting to scope a new project, review an existing system, or plan next steps before committing to a build.', 100.00, 500.00)
+('Globe', 'Basic Website', 'A polished three-page website built to make a strong first impression — clean, focused design with no added integrations.', 100.00, 2500.00, TRUE),
+('Layers', 'Full-Stack Web Development', 'Modern responsive applications built around real business requirements.', 100.00, 500.00, TRUE),
+('Wrench', 'Custom Software', 'Purpose-built applications designed around a company''s workflow.', 150.00, 500.00, TRUE),
+('Plug', 'API Development', 'Secure and maintainable APIs and backend systems.', 100.00, 500.00, FALSE),
+('Atom', 'React Applications', 'Fast, modern and interactive frontend experiences.', 100.00, 500.00, TRUE),
+('Server', 'ASP.NET / C# Development', 'Robust backend systems using modern Microsoft technologies.', 150.00, 500.00, TRUE),
+('Database', 'Database Solutions', 'SQL Server and application data architecture.', 100.00, 500.00, TRUE),
+('CreditCard', 'Payment Integrations', 'Payment workflows and third-party payment integrations.', 150.00, 1500.00, TRUE),
+('CalendarClock', 'Booking & Scheduling', 'Booking systems, availability logic, payments and confirmations.', 100.00, 500.00, TRUE),
+('Sparkles', 'AI-Powered Applications', 'Practical AI integrations and intelligent application features.', 200.00, 5000.00, FALSE),
+('CloudCog', 'Cloud & Deployment', 'Taking applications from development into reliable production environments.', 100.00, 500.00, FALSE),
+('MessageCircle', 'Consult', 'One-on-one technical consulting to scope a new project, review an existing system, or plan next steps before committing to a build.', 100.00, 500.00, TRUE)
 
 ON CONFLICT DO NOTHING;
 

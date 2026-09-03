@@ -21,6 +21,7 @@ export interface Service {
   description: string
   costPerHour: number
   setupFee: number
+  isBookable: boolean
 }
 
 export const serviceIconMap: Record<string, LucideIcon> = {

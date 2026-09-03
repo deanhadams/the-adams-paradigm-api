@@ -53,9 +53,11 @@ export function BookingForm() {
   const [errors, setErrors] = useState<Errors>({})
   const [paymentType, setPaymentType] = useState<PaymentType>('setup')
 
+  const bookableServices = useMemo(() => services.filter((service) => service.isBookable), [services])
+
   const selectedService = useMemo(
-    () => services.find((service) => service.serviceId === Number(values.serviceId)) ?? null,
-    [services, values.serviceId],
+    () => bookableServices.find((service) => service.serviceId === Number(values.serviceId)) ?? null,
+    [bookableServices, values.serviceId],
   )
 
   const amountDue = selectedService
@@ -152,7 +154,7 @@ export function BookingForm() {
           value={values.serviceId}
           onChange={(e) => {
             setField('serviceId', e.target.value)
-            const service = services.find((s) => s.serviceId === Number(e.target.value))
+            const service = bookableServices.find((s) => s.serviceId === Number(e.target.value))
             setPaymentType(service && service.setupFee <= 0 ? 'hourly' : 'setup')
           }}
           disabled={servicesLoading || Boolean(servicesError)}
@@ -163,7 +165,7 @@ export function BookingForm() {
           <option value="" disabled>
             {servicesLoading ? 'Loading services…' : 'Select a service'}
           </option>
-          {services.map((service) => (
+          {bookableServices.map((service) => (
             <option key={service.serviceId} value={service.serviceId}>
               {service.title} — {currencyFormatter.format(service.costPerHour)}/hr
               {service.setupFee > 0 ? ` · ${currencyFormatter.format(service.setupFee)} setup` : ''}
