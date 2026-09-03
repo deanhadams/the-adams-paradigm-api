@@ -114,6 +114,18 @@ export function AiChat() {
         aria-label={isOpen ? 'Close AI assistant' : 'Open AI assistant'}
         className="fixed bottom-6 right-6 z-50 inline-flex size-14 items-center justify-center rounded-full bg-gradient-to-r from-blue-electric to-emerald-glow text-navy-950 shadow-[0_18px_40px_-12px_rgba(59,130,246,0.55)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_50px_-10px_rgba(52,211,153,0.6)]"
       >
+        {!isOpen && (
+          <>
+            <span
+              className="absolute inset-0 -z-10 animate-pulse-soft rounded-full bg-emerald-glow/60 blur-md"
+              aria-hidden="true"
+            />
+            <span className="absolute -right-0.5 -top-0.5 flex size-4" aria-hidden="true">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-blue-electric opacity-75" />
+              <span className="relative inline-flex size-4 rounded-full border-2 border-navy-950 bg-blue-electric" />
+            </span>
+          </>
+        )}
         {isOpen ? <X className="size-6" aria-hidden="true" /> : <Bot className="size-6" aria-hidden="true" />}
       </button>
     </>
