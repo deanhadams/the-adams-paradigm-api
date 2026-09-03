@@ -110,11 +110,36 @@ public class ClaudeService
 
         using var document = JsonDocument.Parse(responseBody);
 
-        var answer = document.RootElement
-            .GetProperty("content")[0]
-            .GetProperty("text")
-            .GetString();
+        try
+        {
+            // Check if the response has the expected structure
+            if (!document.RootElement.TryGetProperty("content", out var contentElement))
+            {
+                throw new HttpRequestException(
+                    $"Unexpected Claude API response structure: 'content' property not found. Response: {responseBody}");
+            }
 
-        return answer ?? "I couldn't generate an answer.";
+            if (contentElement.ValueKind != System.Text.Json.JsonValueKind.Array || contentElement.GetArrayLength() == 0)
+            {
+                throw new HttpRequestException(
+                    $"Unexpected Claude API response structure: 'content' is not a non-empty array. Response: {responseBody}");
+            }
+
+            var firstContent = contentElement[0];
+
+            if (!firstContent.TryGetProperty("text", out var textElement))
+            {
+                throw new HttpRequestException(
+                    $"Unexpected Claude API response structure: 'text' property not found in content[0]. Response: {responseBody}");
+            }
+
+            var answer = textElement.GetString();
+            return answer ?? "I couldn't generate an answer.";
+        }
+        catch (JsonException ex)
+        {
+            throw new HttpRequestException(
+                $"Failed to parse Claude API response: {ex.Message}. Response: {responseBody}", ex);
+        }
     }
 }
