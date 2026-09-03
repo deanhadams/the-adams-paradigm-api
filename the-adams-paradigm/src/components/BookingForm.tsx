@@ -2,6 +2,7 @@ import { type FormEvent, useMemo, useState } from 'react'
 import { AlertCircle, CalendarCheck, ExternalLink, Loader2, X } from 'lucide-react'
 import { useCreateCheckout } from '../hooks/useCreateCheckout'
 import { useServices } from '../hooks/useServices'
+import { cn } from '../lib/cn'
 import { inputClasses } from '../lib/formStyles'
 import { FormField } from './FormField'
 
@@ -18,6 +19,8 @@ const initialState: FormState = {
   surname: '',
   email: '',
 }
+
+type PaymentType = 'setup' | 'hourly'
 
 type Errors = Partial<Record<keyof FormState, string>>
 
@@ -48,11 +51,18 @@ export function BookingForm() {
 
   const [values, setValues] = useState<FormState>(initialState)
   const [errors, setErrors] = useState<Errors>({})
+  const [paymentType, setPaymentType] = useState<PaymentType>('setup')
 
   const selectedService = useMemo(
     () => services.find((service) => service.serviceId === Number(values.serviceId)) ?? null,
     [services, values.serviceId],
   )
+
+  const amountDue = selectedService
+    ? paymentType === 'setup'
+      ? selectedService.setupFee
+      : selectedService.costPerHour
+    : 0
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setValues((prev) => ({ ...prev, [key]: value }))
@@ -70,7 +80,7 @@ export function BookingForm() {
       name: values.name.trim(),
       surname: values.surname.trim(),
       email: values.email.trim(),
-      amount: selectedService.costPerHour,
+      amount: amountDue,
     })
   }
 
@@ -84,6 +94,7 @@ export function BookingForm() {
           type="button"
           onClick={() => {
             setValues(initialState)
+            setPaymentType('setup')
             reset()
           }}
           aria-label="Close"
@@ -121,6 +132,7 @@ export function BookingForm() {
           type="button"
           onClick={() => {
             setValues(initialState)
+            setPaymentType('setup')
             reset()
           }}
           className="mt-2 text-sm font-semibold text-emerald-glow hover:underline"
@@ -138,7 +150,11 @@ export function BookingForm() {
           id="serviceId"
           name="serviceId"
           value={values.serviceId}
-          onChange={(e) => setField('serviceId', e.target.value)}
+          onChange={(e) => {
+            setField('serviceId', e.target.value)
+            const service = services.find((s) => s.serviceId === Number(e.target.value))
+            setPaymentType(service && service.setupFee <= 0 ? 'hourly' : 'setup')
+          }}
           disabled={servicesLoading || Boolean(servicesError)}
           aria-invalid={Boolean(errors.serviceId)}
           aria-describedby={errors.serviceId ? 'serviceId-error' : undefined}
@@ -150,6 +166,7 @@ export function BookingForm() {
           {services.map((service) => (
             <option key={service.serviceId} value={service.serviceId}>
               {service.title} — {currencyFormatter.format(service.costPerHour)}/hr
+              {service.setupFee > 0 ? ` · ${currencyFormatter.format(service.setupFee)} setup` : ''}
             </option>
           ))}
         </select>
@@ -212,12 +229,56 @@ export function BookingForm() {
         />
       </FormField>
 
+      {selectedService && selectedService.setupFee > 0 && (
+        <FormField label="What are you paying for?" htmlFor="paymentType">
+          <div id="paymentType" role="radiogroup" aria-label="What are you paying for?" className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={paymentType === 'setup'}
+              onClick={() => setPaymentType('setup')}
+              className={cn(
+                'rounded-xl border px-4 py-3 text-left transition-all duration-300',
+                paymentType === 'setup'
+                  ? 'border-emerald-glow/50 bg-emerald-glow/[0.08]'
+                  : 'border-white/10 bg-white/[0.02] hover:border-white/20',
+              )}
+            >
+              <span className={cn('block text-sm font-semibold', paymentType === 'setup' ? 'text-emerald-glow' : 'text-mist-50')}>
+                Setup Fee
+              </span>
+              <span className="mt-0.5 block text-xs text-mist-200/60">
+                {currencyFormatter.format(selectedService.setupFee)} to get started
+              </span>
+            </button>
+
+            <button
+              type="button"
+              role="radio"
+              aria-checked={paymentType === 'hourly'}
+              onClick={() => setPaymentType('hourly')}
+              className={cn(
+                'rounded-xl border px-4 py-3 text-left transition-all duration-300',
+                paymentType === 'hourly'
+                  ? 'border-emerald-glow/50 bg-emerald-glow/[0.08]'
+                  : 'border-white/10 bg-white/[0.02] hover:border-white/20',
+              )}
+            >
+              <span className={cn('block text-sm font-semibold', paymentType === 'hourly' ? 'text-emerald-glow' : 'text-mist-50')}>
+                Hourly Rate
+              </span>
+              <span className="mt-0.5 block text-xs text-mist-200/60">
+                {currencyFormatter.format(selectedService.costPerHour)} per hour
+              </span>
+            </button>
+          </div>
+        </FormField>
+      )}
+
       {selectedService && (
         <div className="flex items-center justify-between rounded-xl border border-white/10 bg-navy-900/60 px-4 py-3">
           <span className="text-sm text-mist-200/70">Amount due</span>
-          <span className="text-lg font-semibold text-mist-50">
-            {currencyFormatter.format(selectedService.costPerHour)}
-          </span>
+          <span className="text-lg font-semibold text-mist-50">{currencyFormatter.format(amountDue)}</span>
         </div>
       )}
 
