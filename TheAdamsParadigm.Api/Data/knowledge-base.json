@@ -1,0 +1,404 @@
+{
+  "$schema": "Knowledge base for The Adams Paradigm website — used as source data for FAQs and an AI chatbot. Keep this file up to date as the business changes.",
+  "lastUpdated": "2026-09-03",
+
+  "business": {
+    "name": "The Adams Paradigm",
+    "shortName": "Adams Paradigm",
+    "founder": "Dean Adams",
+    "role": "Full-Stack Developer",
+    "tagline": "Turning Ideas Into Powerful Digital Experiences.",
+    "description": "Dean Adams builds modern websites, web applications, APIs and digital products for small businesses, startups and individuals.",
+    "email": "deanh.adams@gmail.com",
+    "availability": "Available for new projects",
+    "location": "South Africa",
+    "currency": "ZAR",
+    "website": "https://theadamsparadigm.com",
+    "socials": []
+  },
+
+  "about": {
+    "summary": "Dean Adams is a developer who enjoys taking ideas from rough concepts and turning them into functioning digital products. He works across the full process — planning, interface design, backend development, and shipping to real users.",
+    "bio": [
+      "I'm a developer who enjoys taking ideas from rough concepts and turning them into functioning digital products. I like the full range of the process — planning how something should work, building the interface, wiring up the backend, and getting it in front of real users.",
+      "My focus is on building practical solutions: applications that connect a well-designed frontend to a solid backend, integrate cleanly with the APIs and services they depend on, and hold up in production — not just in a demo.",
+      "I'm always learning new technologies as they become useful, and I care about the details that make an application feel good to use, not just function correctly."
+    ],
+    "focusAreas": [
+      "Problem solving",
+      "Connecting frontend and backend systems",
+      "Integrating APIs",
+      "Creating polished user experiences"
+    ]
+  },
+
+  "philosophy": {
+    "principles": [
+      {
+        "title": "Build With Purpose",
+        "description": "Technology should solve a real problem."
+      },
+      {
+        "title": "Keep It Practical",
+        "description": "Choose architecture and tools based on the actual requirements."
+      },
+      {
+        "title": "Make It Feel Good",
+        "description": "Functionality and user experience should work together."
+      },
+      {
+        "title": "Ship & Improve",
+        "description": "Build, test, deploy, learn and continuously improve."
+      }
+    ]
+  },
+
+  "whoWeWorkWith": [
+    {
+      "type": "Small Businesses",
+      "description": "Custom tools and websites that make everyday operations easier."
+    },
+    {
+      "type": "Startups",
+      "description": "MVPs and scalable foundations for new products."
+    },
+    {
+      "type": "Individuals",
+      "description": "Turning personal ideas, projects and concepts into real digital experiences."
+    }
+  ],
+
+  "process": {
+    "summary": "A six-step process from initial idea through to a live, evolving product.",
+    "steps": [
+      {
+        "step": 1,
+        "title": "Discover",
+        "description": "Understand the idea, problem and desired outcome."
+      },
+      {
+        "step": 2,
+        "title": "Plan",
+        "description": "Define functionality, architecture, technology and scope."
+      },
+      {
+        "step": 3,
+        "title": "Build",
+        "description": "Develop the application, backend, integrations and UI."
+      },
+      {
+        "step": 4,
+        "title": "Test",
+        "description": "Validate functionality, responsiveness and reliability."
+      },
+      {
+        "step": 5,
+        "title": "Launch",
+        "description": "Deploy the application and make it available to users."
+      },
+      {
+        "step": 6,
+        "title": "Evolve",
+        "description": "Improve, expand and maintain the product."
+      }
+    ]
+  },
+
+  "technologies": {
+    "summary": "Practical, modern technologies chosen based on what a project actually needs — not novelty for its own sake.",
+    "groups": [
+      {
+        "category": "Frontend",
+        "description": "Interfaces that feel fast, responsive and intentional.",
+        "items": [ "React", "TypeScript", "JavaScript", "HTML", "CSS", "Tailwind CSS" ]
+      },
+      {
+        "category": "Backend",
+        "description": "Reliable systems that power the experience behind the scenes.",
+        "items": [ "C#", ".NET", "ASP.NET Core", "Web APIs", "SignalR" ]
+      },
+      {
+        "category": "Data",
+        "description": "Structured, well-modeled data that scales with the product.",
+        "items": [ "SQL Server", "PostgreSQL", "Relational Database Design" ]
+      },
+      {
+        "category": "Integrations",
+        "description": "Connecting applications to the services they depend on.",
+        "items": [ "REST APIs", "Payment APIs", "Webhooks", "Authentication", "Third-Party Services" ]
+      },
+      {
+        "category": "AI",
+        "description": "Practical intelligence layered into real product features.",
+        "items": [ "AI APIs", "Generative AI", "AI-Powered Application Features" ]
+      },
+      {
+        "category": "Deployment",
+        "description": "Getting code from a repository into a live, working product.",
+        "items": [ "Git", "GitHub", "Cloud Hosting", "Production Deployment" ]
+      }
+    ]
+  },
+
+  "services": {
+    "summary": "All services are hourly-rate based with a one-time setup fee (except Consult, which has a lower setup fee). Prices are in South African Rand (ZAR), excl. VAT unless stated otherwise. All listed services can be booked and paid for directly on the website.",
+    "currency": "ZAR",
+    "list": [
+      {
+        "serviceId": 1,
+        "title": "Full-Stack Web Development",
+        "description": "Modern responsive applications built around real business requirements.",
+        "costPerHour": 120.00,
+        "setupFee": 500.00,
+        "isBookable": true
+      },
+      {
+        "serviceId": 2,
+        "title": "Custom Software",
+        "description": "Purpose-built applications designed around a company's workflow.",
+        "costPerHour": 150.00,
+        "setupFee": 500.00,
+        "isBookable": true
+      },
+      {
+        "serviceId": 3,
+        "title": "API Development",
+        "description": "Secure and maintainable APIs and backend systems.",
+        "costPerHour": 110.00,
+        "setupFee": 500.00,
+        "isBookable": true
+      },
+      {
+        "serviceId": 4,
+        "title": "React Applications",
+        "description": "Fast, modern and interactive frontend experiences.",
+        "costPerHour": 100.00,
+        "setupFee": 500.00,
+        "isBookable": true
+      },
+      {
+        "serviceId": 5,
+        "title": "ASP.NET / C# Development",
+        "description": "Robust backend systems using modern Microsoft technologies.",
+        "costPerHour": 130.00,
+        "setupFee": 500.00,
+        "isBookable": true
+      },
+      {
+        "serviceId": 6,
+        "title": "Database Solutions",
+        "description": "SQL Server and application data architecture.",
+        "costPerHour": 140.00,
+        "setupFee": 500.00,
+        "isBookable": true
+      },
+      {
+        "serviceId": 7,
+        "title": "Payment Integrations",
+        "description": "Payment workflows and third-party payment integrations.",
+        "costPerHour": 125.00,
+        "setupFee": 500.00,
+        "isBookable": true
+      },
+      {
+        "serviceId": 8,
+        "title": "Booking & Scheduling",
+        "description": "Booking systems, availability logic, payments and confirmations.",
+        "costPerHour": 95.00,
+        "setupFee": 500.00,
+        "isBookable": true
+      },
+      {
+        "serviceId": 9,
+        "title": "AI-Powered Applications",
+        "description": "Practical AI integrations and intelligent application features.",
+        "costPerHour": 160.00,
+        "setupFee": 500.00,
+        "isBookable": true
+      },
+      {
+        "serviceId": 10,
+        "title": "Cloud & Deployment",
+        "description": "Taking applications from development into reliable production environments.",
+        "costPerHour": 100.00,
+        "setupFee": 500.00,
+        "isBookable": true
+      },
+      {
+        "serviceId": 11,
+        "title": "Basic Website",
+        "description": "A polished three-page website built to make a strong first impression — clean, focused design with no added integrations.",
+        "costPerHour": 100.00,
+        "setupFee": 2500.00,
+        "isBookable": true
+      },
+      {
+        "serviceId": 12,
+        "title": "Consult",
+        "description": "One-on-one technical consulting to scope a new project, review an existing system, or plan next steps before committing to a build.",
+        "costPerHour": 100.00,
+        "setupFee": 500.00,
+        "isBookable": true
+      }
+    ]
+  },
+
+  "booking": {
+    "summary": "Services can be booked directly on the website's Booking section. Select a service, enter your name, surname and email, choose whether you're paying the setup fee or the hourly rate, and you'll receive a secure payment link instantly plus a confirmation email.",
+    "paymentProvider": "Yoco",
+    "currency": "ZAR",
+    "steps": [
+      "Choose a bookable service from the dropdown.",
+      "Enter your name, surname and email address.",
+      "Choose what you're paying for: the setup fee (to get started) or the hourly rate.",
+      "Submit the form to create an order and receive a secure Yoco payment link.",
+      "A confirmation email with the order details is sent to the email address provided.",
+      "Complete payment via the provided payment link."
+    ],
+    "viewBookings": "Users can view their past bookings/orders by clicking 'View Bookings' and looking them up, typically by email."
+  },
+
+  "contact": {
+    "summary": "Visitors can start a conversation via the Contact section, choosing one of three paths depending on how far along their idea is.",
+    "email": "deanh.adams@gmail.com",
+    "conversionPaths": [
+      {
+        "title": "Start a Project",
+        "description": "For people ready to discuss development."
+      },
+      {
+        "title": "Request a Quote",
+        "description": "For people who know what they need."
+      },
+      {
+        "title": "Book a Consultation",
+        "description": "For people who want to discuss an idea first."
+      }
+    ],
+    "projectTypeOptions": [
+      "Website",
+      "Web Application",
+      "Custom Software",
+      "API / Integration",
+      "Payment System",
+      "Booking System",
+      "AI Application",
+      "Other"
+    ],
+    "budgetOptions": [
+      "Not sure yet",
+      "Under R5,000",
+      "R5,000 – R15,000",
+      "R15,000 – R50,000",
+      "R50,000+"
+    ]
+  },
+
+  "projects": [
+    {
+      "name": "Complete The Eleven FC",
+      "category": "Football • Interactive Game • Web Application",
+      "description": "An interactive football game built around legendary starting lineups where players must identify the missing star.",
+      "highlights": [ "Game logic", "Interactive UI", "Football data", "Responsive design", "User engagement" ],
+      "tags": [ "React", "TypeScript", "Game Logic", "Responsive UI" ],
+      "url": "https://lineup-legends.vercel.app/",
+      "featured": true,
+      "challenge": "Turn static football trivia into a genuinely replayable game — one that tests recall against real starting lineups without feeling like a quiz form.",
+      "solution": "A lineup-based guessing engine that presents legendary starting elevens with one player missing, backed by a responsive board UI that works as well on a phone as it does on a desktop.",
+      "features": [
+        "Lineup and squad data modeling",
+        "Round-based guessing logic with scoring",
+        "Responsive pitch-style layout",
+        "Fast, reactive UI built in React"
+      ]
+    },
+    {
+      "name": "Devil Bunny",
+      "category": "Anime • Digital Universe • Creative Platform",
+      "description": "A large-scale original anime/manga universe developed into a digital experience.",
+      "highlights": [ "World building", "Character systems", "Storytelling", "Digital presentation", "Creative technology" ],
+      "tags": [ "World Building", "Content Systems", "Digital Presentation" ],
+      "url": "https://devil-bunny-official-series.ai.studio/",
+      "featured": false
+    },
+    {
+      "name": "World Quiz League",
+      "category": "Quiz Platform • Real-Time Experience",
+      "description": "An interactive quiz platform concept designed around categories, difficulty, scoring, competition and leaderboards.",
+      "highlights": [ "Real-time interaction", "Game mechanics", "Scoring", "Leaderboards", "Question systems" ],
+      "tags": [ "SignalR", "Real-Time", "Leaderboards" ],
+      "featured": false
+    },
+    {
+      "name": "FlowDesk",
+      "category": "Professional Product Concept",
+      "description": "A modern business operations platform bringing bookings, customer management, payments and workflow automation into one place.",
+      "highlights": [ "Authentication", "Dashboard", "Booking", "Payments", "Database", "API architecture", "Notifications" ],
+      "tags": [ "ASP.NET Core", "React", "SQL Server", "Payments API" ],
+      "featured": false
+    }
+  ],
+
+  "faqs": [
+    {
+      "question": "What does The Adams Paradigm do?",
+      "answer": "The Adams Paradigm, run by Dean Adams, builds modern websites, web applications, APIs and digital products for small businesses, startups and individuals — from initial idea through to a live, working product."
+    },
+    {
+      "question": "Who is behind The Adams Paradigm?",
+      "answer": "Dean Adams, a full-stack developer who handles the full process himself: planning, frontend, backend, integrations, testing and deployment."
+    },
+    {
+      "question": "What services do you offer?",
+      "answer": "Full-Stack Web Development, Custom Software, API Development, React Applications, ASP.NET / C# Development, Database Solutions, Payment Integrations, Booking & Scheduling systems, AI-Powered Applications, Cloud & Deployment, a Basic Website package, and one-on-one Consults."
+    },
+    {
+      "question": "How much do your services cost?",
+      "answer": "Pricing is hourly plus a one-time setup fee, in ZAR. Hourly rates range from R95–R160 depending on the service, with most setup fees at R500 (the Basic Website package has a R2,500 setup fee). Exact quotes depend on project scope."
+    },
+    {
+      "question": "How do I book a service?",
+      "answer": "Go to the Booking section on the website, select a service, enter your name, surname and email, choose whether you're paying the setup fee or the hourly rate, and submit. You'll get a secure Yoco payment link instantly plus a confirmation email."
+    },
+    {
+      "question": "What payment methods do you accept?",
+      "answer": "Payments are processed securely through Yoco, in South African Rand (ZAR)."
+    },
+    {
+      "question": "Do you work with individuals or only businesses?",
+      "answer": "Both — and startups too. Projects range from small business tools and startup MVPs to personal passion projects."
+    },
+    {
+      "question": "What technologies do you use?",
+      "answer": "React, TypeScript and Tailwind CSS on the frontend; C#, .NET, ASP.NET Core, Web APIs and SignalR on the backend; SQL Server and PostgreSQL for data; plus REST APIs, payment integrations, authentication, and AI APIs where useful."
+    },
+    {
+      "question": "What is your development process?",
+      "answer": "Six steps: Discover, Plan, Build, Test, Launch, and Evolve — from understanding the problem through to a live product that keeps improving."
+    },
+    {
+      "question": "Can you build an MVP for my startup?",
+      "answer": "Yes — MVPs and scalable product foundations for startups are a core part of the work."
+    },
+    {
+      "question": "Do you build AI-powered features?",
+      "answer": "Yes, the AI-Powered Applications service covers practical AI integrations and intelligent features built into real products."
+    },
+    {
+      "question": "How do I get a quote?",
+      "answer": "Use the Contact section and choose 'Request a Quote' (or 'Start a Project' / 'Book a Consultation' depending on where you're at), and describe the project."
+    },
+    {
+      "question": "How can I contact Dean directly?",
+      "answer": "Email deanh.adams@gmail.com, or use the contact form on the website."
+    },
+    {
+      "question": "Can I see examples of past work?",
+      "answer": "Yes — the Projects section showcases work including Complete The Eleven FC (an interactive football lineup game), Devil Bunny (an anime universe digital experience), World Quiz League (a real-time quiz platform concept), and FlowDesk (a business operations platform concept)."
+    },
+    {
+      "question": "Are you currently taking on new projects?",
+      "answer": "Yes, availability is currently open for new projects."
+    }
+  ]
+}

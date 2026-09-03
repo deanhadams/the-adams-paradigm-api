@@ -44,6 +44,7 @@ builder.Services.AddCors(options =>
 
 // Register database seeding service
 builder.Services.AddScoped<DatabaseSeedService>();
+builder.Services.AddSingleton<KnowledgeBaseService>();
 
 builder.Services.Configure<YocoSettings>(
     builder.Configuration.GetSection("Yoco"));
@@ -61,6 +62,14 @@ builder.Services.Configure<ResendSettings>(
 builder.Services.AddHttpClient<ResendService>(client =>
 {
     client.BaseAddress = new Uri("https://api.resend.com/");
+});
+
+builder.Services.Configure<AnthropicSettings>(
+    builder.Configuration.GetSection("Anthropic"));
+
+builder.Services.AddHttpClient<ClaudeService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.anthropic.com/");
 });
 
 var app = builder.Build();
