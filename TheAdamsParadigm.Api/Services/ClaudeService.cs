@@ -11,15 +11,18 @@ public class ClaudeService
     private readonly HttpClient _httpClient;
     private readonly AnthropicSettings _settings;
     private readonly KnowledgeSearchService _knowledgeSearchService;
+    private readonly ProjectDiscoveryService _projectDiscoveryService;
 
     public ClaudeService(
         HttpClient httpClient,
         IOptions<AnthropicSettings> settings,
-        KnowledgeSearchService knowledgeSearchService)
+        KnowledgeSearchService knowledgeSearchService,
+        ProjectDiscoveryService projectDiscoveryService)
     {
         _httpClient = httpClient;
         _settings = settings.Value;
         _knowledgeSearchService = knowledgeSearchService;
+        _projectDiscoveryService = projectDiscoveryService;
     }
 
     public async Task<string> AskClaudeAsync(
@@ -32,6 +35,15 @@ public class ClaudeService
 
         var searchResult =
             _knowledgeSearchService.Search(question);
+
+        var discovery =
+            _projectDiscoveryService.Analyze(
+                question,
+                history ?? []);
+
+        var discoveryPrompt =
+            _projectDiscoveryService.BuildDiscoveryPrompt(
+                discovery);
 
         // =========================================================
         // 2. Get relevant knowledge
@@ -320,6 +332,10 @@ public class ClaudeService
 
             {relevantKnowledge}
 
+            PROJECT DISCOVERY
+
+            {discoveryPrompt}
+
             ========================================================
             FINAL INSTRUCTION
             ========================================================
@@ -416,6 +432,10 @@ public class ClaudeService
         var responseBody =
             await response.Content.ReadAsStringAsync();
 
+        Console.WriteLine("========== CLAUDE RESPONSE ==========");
+        Console.WriteLine(responseBody);
+        Console.WriteLine("=====================================");
+
         // =========================================================
         // 9. Handle HTTP errors
         // =========================================================
@@ -438,25 +458,29 @@ public class ClaudeService
 
             var root = document.RootElement;
 
-            if (!root.TryGetProperty(
-                    "content",
-                    out var contentElement))
+            // Log the raw response if the structure isn't what we expect.
+            if (!root.TryGetProperty("content", out var contentElement))
             {
                 throw new InvalidOperationException(
-                    "Claude response did not contain a 'content' property.");
+                    $"Claude response did not contain a 'content' property. " +
+                    $"Raw response: {responseBody}");
             }
 
             if (contentElement.ValueKind != JsonValueKind.Array)
             {
                 throw new InvalidOperationException(
-                    "Claude response 'content' was not an array.");
+                    $"Claude response 'content' was not an array. " +
+                    $"Raw response: {responseBody}");
             }
 
             if (contentElement.GetArrayLength() == 0)
             {
                 throw new InvalidOperationException(
-                    "Claude response contained an empty 'content' array.");
+                    $"Claude response contained an empty 'content' array. " +
+                    $"Raw response: {responseBody}");
             }
+
+            var textBuilder = new StringBuilder();
 
             foreach (var block in contentElement.EnumerateArray())
             {
@@ -465,37 +489,44 @@ public class ClaudeService
                     continue;
                 }
 
-                if (!block.TryGetProperty(
-                        "type",
-                        out var typeElement))
+                // Claude normally returns:
+                //
+                // {
+                //     "type": "text",
+                //     "text": "..."
+                // }
+
+                if (block.TryGetProperty("type", out var typeElement))
                 {
-                    continue;
-                }
+                    var type = typeElement.GetString();
 
-                var type = typeElement.GetString();
+                    if (type == "text" &&
+                        block.TryGetProperty("text", out var textElement))
+                    {
+                        var text = textElement.GetString();
 
-                if (type != "text")
-                {
-                    continue;
-                }
-
-                if (!block.TryGetProperty(
-                        "text",
-                        out var textElement))
-                {
-                    continue;
-                }
-
-                var answer = textElement.GetString();
-
-                if (!string.IsNullOrWhiteSpace(answer))
-                {
-                    return answer.Trim();
+                        if (!string.IsNullOrWhiteSpace(text))
+                        {
+                            textBuilder.Append(text);
+                        }
+                    }
                 }
             }
 
+            var answer = textBuilder
+                .ToString()
+                .Trim();
+
+            if (!string.IsNullOrWhiteSpace(answer))
+            {
+                return answer;
+            }
+
+            // If we reach this point, Claude returned HTTP 200 but
+            // the response wasn't something we expected.
             throw new InvalidOperationException(
-                "Claude response contained no usable text content.");
+                $"Claude returned HTTP 200 but no usable text was found. " +
+                $"Raw response: {responseBody}");
         }
         catch (JsonException ex)
         {
