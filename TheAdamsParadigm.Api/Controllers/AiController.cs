@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using TheAdamsParadigm.Api.Configuration;
 using TheAdamsParadigm.Api.Models;
 using TheAdamsParadigm.Api.Services;
 
@@ -9,10 +11,21 @@ namespace TheAdamsParadigm.Api.Controllers;
 public class AiController : ControllerBase
 {
     private readonly ClaudeService _claudeService;
+    private readonly AnthropicSettings _anthropicSettings;
 
-    public AiController(ClaudeService claudeService)
+    public AiController(ClaudeService claudeService, IOptions<AnthropicSettings> anthropicSettings)
     {
         _claudeService = claudeService;
+        _anthropicSettings = anthropicSettings.Value;
+    }
+
+    [HttpGet("status")]
+    public ActionResult<object> GetStatus()
+    {
+        return Ok(new
+        {
+            status = _anthropicSettings.Status
+        });
     }
 
     [HttpPost("chat")]

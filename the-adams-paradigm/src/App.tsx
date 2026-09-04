@@ -1,4 +1,5 @@
 import { AiChat } from './components/AiChat'
+import { useAiStatus } from './hooks/useAiStatus'
 import { Navbar } from './components/Navbar'
 import { Footer } from './components/Footer'
 import { Hero } from './sections/Hero'
@@ -15,6 +16,8 @@ import { ClientTypes } from './sections/ClientTypes'
 import { Contact } from './sections/Contact'
 
 function App() {
+  const isAiOnline = useAiStatus()
+
   return (
     <>
       <Navbar />
@@ -33,7 +36,7 @@ function App() {
         <Contact />
       </main>
       <Footer />
-      <AiChat />
+      {isAiOnline && <AiChat />}
     </>
   )
 }
