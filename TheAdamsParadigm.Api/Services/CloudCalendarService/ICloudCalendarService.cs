@@ -8,6 +8,13 @@ namespace TheAdamsParadigm.Api.Services.CloudCalendarService
     {
         private readonly HttpClient _httpClient;
         private readonly ICloudSettings _settings;
+        private ICloudCalendar? _bookingCalendar;
+        private readonly SemaphoreSlim _bookingCalendarLock = new(1, 1);
+        private static readonly TimeZoneInfo BookingTimeZone =
+            TimeZoneInfo.FindSystemTimeZoneById(
+                OperatingSystem.IsWindows()
+                    ? "South Africa Standard Time"
+                    : "Africa/Johannesburg");
 
         public ICloudCalendarService(
             HttpClient httpClient,
@@ -17,45 +24,57 @@ namespace TheAdamsParadigm.Api.Services.CloudCalendarService
             _settings = settings;
         }
 
-        public async Task<bool> TestConnectionAsync()
+        private async Task<ICloudCalendar> GetBookingCalendarAsync()
         {
-            var credentials = Convert.ToBase64String(
-                System.Text.Encoding.UTF8.GetBytes(
-                    $"{_settings.Username}:{_settings.Password}"));
+            // Fast path:
+            // The calendar has already been discovered.
+            if (_bookingCalendar != null)
+            {
+                return _bookingCalendar;
+            }
 
-            using var request = new HttpRequestMessage(
-                new HttpMethod("PROPFIND"),
-                _settings.ServerUrl);
+            // Only one request is allowed to perform discovery.
+            await _bookingCalendarLock.WaitAsync();
 
-            request.Headers.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue(
-                    "Basic",
-                    credentials);
+            try
+            {
+                // Check again after acquiring the lock.
+                //
+                // Another request may have discovered and cached
+                // the calendar while this request was waiting.
+                if (_bookingCalendar != null)
+                {
+                    return _bookingCalendar;
+                }
 
-            request.Headers.Add("Depth", "0");
+                Console.WriteLine(
+                    "Booking calendar not cached. Discovering calendars...");
 
-            var xml = """
-              <?xml version="1.0" encoding="utf-8" ?>
-              <D:propfind xmlns:D="DAV:">
-                  <D:prop>
-                      <D:current-user-principal />
-                  </D:prop>
-              </D:propfind>
-              """;
+                var calendars = await DiscoverCalendarsAsync();
 
-            request.Content = new StringContent(
-                xml,
-                System.Text.Encoding.UTF8,
-                "application/xml");
+                var bookingCalendar = calendars
+                    .FirstOrDefault(x =>
+                        x.Name.Equals(
+                            "Bookings",
+                            StringComparison.OrdinalIgnoreCase));
 
-            using var response = await _httpClient.SendAsync(request);
+                if (bookingCalendar == null)
+                {
+                    throw new InvalidOperationException(
+                        "iCloud calendar 'Booking' was not found.");
+                }
 
-            var responseBody = await response.Content.ReadAsStringAsync();
+                _bookingCalendar = bookingCalendar;
 
-            Console.WriteLine($"iCloud Status: {(int)response.StatusCode}");
-            Console.WriteLine($"iCloud Response: {responseBody}");
+                Console.WriteLine(
+                    $"Booking calendar cached: {_bookingCalendar.Url}");
 
-            return response.IsSuccessStatusCode;
+                return _bookingCalendar;
+            }
+            finally
+            {
+                _bookingCalendarLock.Release();
+            }
         }
 
         public async Task<List<ICloudCalendar>> DiscoverCalendarsAsync()
@@ -362,22 +381,9 @@ namespace TheAdamsParadigm.Api.Services.CloudCalendarService
             // STEP 1 — Discover the Booking calendar
             // =========================================================
 
-            var calendars = await DiscoverCalendarsAsync();
+            var bookingCalendar =  await GetBookingCalendarAsync();
 
-            var bookingCalendar = calendars
-                .FirstOrDefault(x =>
-                    x.Name.Equals(
-                        "Bookings",
-                        StringComparison.OrdinalIgnoreCase));
-
-            if (bookingCalendar == null)
-            {
-                throw new Exception(
-                    "The 'Booking' calendar could not be found.");
-            }
-
-            Console.WriteLine(
-                $"Using Booking calendar: {bookingCalendar.Url}");
+            Console.WriteLine($"Using Booking calendar: {bookingCalendar.Url}");
 
             // =========================================================
             // STEP 2 — Create CalDAV calendar-query REPORT
@@ -491,17 +497,7 @@ namespace TheAdamsParadigm.Api.Services.CloudCalendarService
         public async Task<string> CreateEventAsync(
             CreateICloudCalendarEventRequest request)
         {
-            var calendars = await DiscoverCalendarsAsync();
-
-            var bookingCalendar = calendars
-                .FirstOrDefault(x =>
-                    x.Name.Equals(
-                        "Bookings",
-                        StringComparison.OrdinalIgnoreCase));
-
-            if (bookingCalendar == null)
-                throw new InvalidOperationException(
-                    "iCloud calendar 'Booking' was not found.");
+            var bookingCalendar = await GetBookingCalendarAsync();
 
             var uid = $"{Guid.NewGuid()}@theadamsparadigm";
 
@@ -562,19 +558,7 @@ END:VCALENDAR
             string uid,
             UpdateICloudCalendarEventRequest request)
         {
-            var calendars = await DiscoverCalendarsAsync();
-
-            var bookingCalendar = calendars
-                .FirstOrDefault(x =>
-                    x.Name.Equals(
-                        "Bookings",
-                        StringComparison.OrdinalIgnoreCase));
-
-            if (bookingCalendar == null)
-            {
-                throw new InvalidOperationException(
-                    "iCloud calendar 'Booking' was not found.");
-            }
+            var bookingCalendar = await GetBookingCalendarAsync();
 
             var eventUrl =
                 $"{bookingCalendar.Url.TrimEnd('/')}/{uid}.ics";
@@ -631,19 +615,7 @@ END:VCALENDAR
 
         public async Task DeleteEventAsync(string uid)
         {
-            var calendars = await DiscoverCalendarsAsync();
-
-            var bookingCalendar = calendars
-                .FirstOrDefault(x =>
-                    x.Name.Equals(
-                        "Bookings",
-                        StringComparison.OrdinalIgnoreCase));
-
-            if (bookingCalendar == null)
-            {
-                throw new InvalidOperationException(
-                    "iCloud calendar 'Booking' was not found.");
-            }
+            var bookingCalendar = await GetBookingCalendarAsync();
 
             var eventUrl =
                 $"{bookingCalendar.Url.TrimEnd('/')}/{uid}.ics";
@@ -679,9 +651,16 @@ END:VCALENDAR
 
         private static string ToCalDavDateTime(DateTime dateTime)
         {
-            return dateTime
-                .ToUniversalTime()
-                .ToString("yyyyMMdd'T'HHmmss'Z'");
+            var localTime = DateTime.SpecifyKind(
+                dateTime,
+                DateTimeKind.Unspecified);
+
+            var utcTime = TimeZoneInfo.ConvertTimeToUtc(
+                localTime,
+                BookingTimeZone);
+
+            return utcTime.ToString(
+                "yyyyMMdd'T'HHmmss'Z'");
         }
 
         private static ICloudCalendarEvent? ParseCalendarEvent(
@@ -764,17 +743,38 @@ END:VCALENDAR
             string[] formats =
             [
                 "yyyyMMdd'T'HHmmss'Z'",
-        "yyyyMMdd'T'HHmmss",
-        "yyyyMMdd"
+                "yyyyMMdd'T'HHmmss",
+                "yyyyMMdd"
             ];
 
-            return DateTime.TryParseExact(
-                value,
-                formats,
-                System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.AssumeUniversal |
-                System.Globalization.DateTimeStyles.AdjustToUniversal,
-                out result);
+            if (!DateTime.TryParseExact(
+                    value,
+                    formats,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None,
+                    out var parsed))
+            {
+                return false;
+            }
+
+            // iCloud value ending in Z = UTC
+            if (value.EndsWith("Z", StringComparison.OrdinalIgnoreCase))
+            {
+                result = TimeZoneInfo.ConvertTimeFromUtc(
+                    DateTime.SpecifyKind(
+                        parsed,
+                        DateTimeKind.Utc),
+                    BookingTimeZone);
+
+                return true;
+            }
+
+            // Floating/local calendar time.
+            result = DateTime.SpecifyKind(
+                parsed,
+                DateTimeKind.Unspecified);
+
+            return true;
         }
 
         private static string EscapeICalendarText(string value) 

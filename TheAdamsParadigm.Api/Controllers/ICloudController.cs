@@ -17,28 +17,6 @@ namespace TheAdamsParadigm.Api.Controllers
             _iCloudCalendarService = iCloudCalendarService;
         }
 
-        [HttpGet("test")]
-        public async Task<IActionResult> Test()
-        {
-            var connected =
-                await _iCloudCalendarService.TestConnectionAsync();
-
-            if (connected)
-            {
-                return Ok(new
-                {
-                    success = true,
-                    message = "Successfully connected to iCloud."
-                });
-            }
-
-            return Unauthorized(new
-            {
-                success = false,
-                message = "Unable to authenticate with iCloud."
-            });
-        }
-
         [HttpGet("calendars")]
         public async Task<IActionResult> GetCalendars()
         {
