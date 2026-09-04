@@ -28,7 +28,8 @@ public class AiController : ControllerBase
         }
 
         var answer = await _claudeService.AskClaudeAsync(
-            request.Message);
+            request.Message,
+            request.History);
 
         return Ok(new ChatResponse
         {

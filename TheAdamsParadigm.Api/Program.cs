@@ -45,6 +45,7 @@ builder.Services.AddCors(options =>
 // Register database seeding service
 builder.Services.AddScoped<DatabaseSeedService>();
 builder.Services.AddSingleton<KnowledgeBaseService>();
+builder.Services.AddSingleton<KnowledgeSearchService>();
 
 builder.Services.Configure<YocoSettings>(
     builder.Configuration.GetSection("Yoco"));

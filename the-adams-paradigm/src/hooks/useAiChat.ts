@@ -6,7 +6,8 @@ export interface ChatMessage {
   content: string
 }
 
-const FALLBACK_ERROR_MESSAGE = "Sorry, I'm having trouble connecting right now. Please try again in a moment."
+const FALLBACK_ERROR_MESSAGE =
+  "Sorry, I'm having trouble connecting right now. Please try again in a moment."
 
 interface UseAiChatResult {
   messages: ChatMessage[]
@@ -21,34 +22,82 @@ export function useAiChat(): UseAiChatResult {
   const sendMessage = useCallback(
     async (text: string) => {
       const trimmed = text.trim()
+
       if (!trimmed || isSending) return
 
-      setMessages((prev) => [...prev, { role: 'user', content: trimmed }])
+      // Keep a copy of the conversation BEFORE adding
+      // the new user message.
+      const history = messages.map((message) => ({
+        role: message.role,
+        content: message.content,
+      }))
+
+      // Add the new user message to the UI immediately.
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'user',
+          content: trimmed,
+        },
+      ])
+
       setIsSending(true)
 
       try {
         const response = await fetch(`${API_BASE_URL}/api/ai/chat`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: trimmed }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: trimmed,
+            history,
+          }),
         })
 
-        if (!response.ok) throw new Error(`Request failed with status ${response.status}`)
+        if (!response.ok) {
+          throw new Error(
+            `Request failed with status ${response.status}`,
+          )
+        }
 
         const data: { answer?: string } = await response.json()
-        const answer = data.answer?.trim()
-        if (!answer) throw new Error('Received an empty response from the assistant.')
 
-        setMessages((prev) => [...prev, { role: 'assistant', content: answer }])
+        const answer = data.answer?.trim()
+
+        if (!answer) {
+          throw new Error(
+            'Received an empty response from the assistant.',
+          )
+        }
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: answer,
+          },
+        ])
       } catch (err) {
         console.error('AI chat request failed:', err)
-        setMessages((prev) => [...prev, { role: 'assistant', content: FALLBACK_ERROR_MESSAGE }])
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: FALLBACK_ERROR_MESSAGE,
+          },
+        ])
       } finally {
         setIsSending(false)
       }
     },
-    [isSending],
+    [isSending, messages],
   )
 
-  return { messages, isSending, sendMessage }
+  return {
+    messages,
+    isSending,
+    sendMessage,
+  }
 }
