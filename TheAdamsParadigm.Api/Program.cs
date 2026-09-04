@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TheAdamsParadigm.Api.Configuration;
 using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Services;
+using TheAdamsParadigm.Api.Services.CloudCalendarService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +50,9 @@ builder.Services.AddSingleton<KnowledgeBaseService>();
 builder.Services.AddSingleton<KnowledgeSearchService>();
 builder.Services.AddSingleton<ProjectDiscoveryService>();
 
+builder.Services.Configure<ICloudSettings>(
+    builder.Configuration.GetSection("ICloud"));
+
 builder.Services.Configure<YocoSettings>(
     builder.Configuration.GetSection("Yoco"));
 
@@ -57,6 +62,14 @@ builder.Services.AddHttpClient<YocoService>(client =>
 });
 
 builder.Services.AddSingleton<ProcessedWebhookStore>();
+builder.Services.AddHttpClient<ICloudCalendarService>();
+builder.Services.AddTransient<ICloudCalendarService>(sp =>
+{
+    var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient(nameof(ICloudCalendarService));
+    var settings = sp.GetRequiredService<IOptions<ICloudSettings>>().Value;
+    return new ICloudCalendarService(httpClient, settings);
+});
 
 builder.Services.Configure<ResendSettings>(
     builder.Configuration.GetSection("Resend"));
