@@ -114,7 +114,10 @@ public class MemoryExtractionService
             - Never extract sensitive data: health, financial details, government IDs, religion,
               sexual orientation, or political views. Skip these entirely, even if mentioned.
             - Skip temporary or one-off details (e.g. "I'm busy today") that won't matter later.
-            - Each fact must be categorized as exactly one of: "profile", "preferences", "context".
+            - Each fact must be categorized as exactly one of:
+              - "profile": who the visitor is — name, role, company/business, industry.
+              - "preferences": how they like things done — communication style, format, tone.
+              - "context": what they're currently working on or trying to accomplish right now.
             - If there is nothing worth remembering, return an empty facts array.
 
             Respond with strict JSON only, no other text, matching exactly this shape:
