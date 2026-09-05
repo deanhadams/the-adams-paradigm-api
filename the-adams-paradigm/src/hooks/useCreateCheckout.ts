@@ -7,6 +7,8 @@ export interface CreateCheckoutRequest {
   surname: string
   email: string
   amount: number
+  bookingStart: string
+  durationMinutes: number
 }
 
 export interface CreateCheckoutResponse {
@@ -16,6 +18,8 @@ export interface CreateCheckoutResponse {
   amount: number
   currency: string
   yocoStatus: string | null
+  bookingStart: string
+  bookingEnd: string
 }
 
 type Status = 'idle' | 'submitting' | 'success' | 'error'
@@ -43,7 +47,10 @@ export function useCreateCheckout(): UseCreateCheckoutResult {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request),
       })
-      if (!response.ok) throw new Error(`Request failed with status ${response.status}`)
+      if (!response.ok) {
+        const body = await response.json().catch(() => null) as { error?: string } | null
+        throw new Error(body?.error ?? `Request failed with status ${response.status}`)
+      }
 
       const data: CreateCheckoutResponse = await response.json()
       setResult(data)

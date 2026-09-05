@@ -22,7 +22,7 @@ namespace TheAdamsParadigm.Api.Services.CloudCalendarService
         private readonly ConcurrentDictionary<string, ICloudCalendar> _bookingCalendars = new();
         private readonly ConcurrentDictionary<string, SemaphoreSlim> _bookingCalendarLocks = new();
 
-        private static readonly TimeZoneInfo BookingTimeZone =
+        public static readonly TimeZoneInfo BookingTimeZone =
             TimeZoneInfo.FindSystemTimeZoneById(
                 OperatingSystem.IsWindows()
                     ? "South Africa Standard Time"

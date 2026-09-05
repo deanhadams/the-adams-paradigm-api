@@ -65,6 +65,9 @@ builder.Services.AddScoped<KnowledgeChunkSeedService>();
 builder.Services.Configure<ICloudSettings>(
     builder.Configuration.GetSection("ICloud"));
 
+builder.Services.Configure<BookingSettings>(
+    builder.Configuration.GetSection("Booking"));
+
 builder.Services.Configure<YocoSettings>(
     builder.Configuration.GetSection("Yoco"));
 

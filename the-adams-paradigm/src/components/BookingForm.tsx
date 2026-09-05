@@ -1,16 +1,40 @@
 import { type FormEvent, useMemo, useState } from 'react'
-import { AlertCircle, CalendarCheck, ExternalLink, Loader2, X } from 'lucide-react'
+import { AlertCircle, CalendarCheck, Clock, ExternalLink, Loader2, X } from 'lucide-react'
+import { useAvailableSlots } from '../hooks/useAvailableSlots'
 import { useCreateCheckout } from '../hooks/useCreateCheckout'
 import { useServices } from '../hooks/useServices'
 import { cn } from '../lib/cn'
 import { inputClasses } from '../lib/formStyles'
 import { FormField } from './FormField'
 
+const BOOKING_DURATION_MINUTES = 60
+
 interface FormState {
   serviceId: string
   name: string
   surname: string
   email: string
+  bookingDate: string
+}
+
+function todayDateString(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// The API returns wall-clock times for the business's own timezone (Africa/Johannesburg),
+// not the visitor's. Formatting via Date/Intl would silently reinterpret them in the
+// visitor's local timezone, so the time part is read straight out of the ISO string instead.
+function formatSlotTime(isoString: string): string {
+  const [, timePart] = isoString.split('T')
+  const [hourStr, minuteStr] = timePart.split(':')
+  const hour = Number(hourStr)
+  const period = hour >= 12 ? 'PM' : 'AM'
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12
+  return `${hour12}:${minuteStr} ${period}`
 }
 
 const initialState: FormState = {
@@ -18,15 +42,16 @@ const initialState: FormState = {
   name: '',
   surname: '',
   email: '',
+  bookingDate: '',
 }
 
 type PaymentType = 'setup' | 'hourly'
 
-type Errors = Partial<Record<keyof FormState, string>>
+type Errors = Partial<Record<keyof FormState, string>> & { slot?: string }
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-function validate(values: FormState): Errors {
+function validate(values: FormState, selectedSlotStart: string | null): Errors {
   const errors: Errors = {}
   if (!values.serviceId) errors.serviceId = 'Please select a service.'
   if (!values.name.trim()) errors.name = 'Please enter your name.'
@@ -35,6 +60,11 @@ function validate(values: FormState): Errors {
     errors.email = 'Please enter your email.'
   } else if (!emailPattern.test(values.email.trim())) {
     errors.email = 'Please enter a valid email address.'
+  }
+  if (!values.bookingDate) {
+    errors.bookingDate = 'Please choose a date.'
+  } else if (!selectedSlotStart) {
+    errors.slot = 'Please choose an available time.'
   }
   return errors
 }
@@ -52,6 +82,7 @@ export function BookingForm() {
   const [values, setValues] = useState<FormState>(initialState)
   const [errors, setErrors] = useState<Errors>({})
   const [paymentType, setPaymentType] = useState<PaymentType>('setup')
+  const [selectedSlotStart, setSelectedSlotStart] = useState<string | null>(null)
 
   const bookableServices = useMemo(() => services.filter((service) => service.isBookable), [services])
 
@@ -66,16 +97,28 @@ export function BookingForm() {
       : selectedService.costPerHour
     : 0
 
+  const bookingDateObject = values.bookingDate ? new Date(`${values.bookingDate}T00:00:00`) : null
+  const {
+    slots,
+    status: slotsStatus,
+    error: slotsError,
+  } = useAvailableSlots(bookingDateObject, BOOKING_DURATION_MINUTES)
+
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setValues((prev) => ({ ...prev, [key]: value }))
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }))
   }
 
+  const handleDateChange = (value: string) => {
+    setField('bookingDate', value)
+    setSelectedSlotStart(null)
+  }
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const validationErrors = validate(values)
+    const validationErrors = validate(values, selectedSlotStart)
     setErrors(validationErrors)
-    if (Object.keys(validationErrors).length > 0 || !selectedService) return
+    if (Object.keys(validationErrors).length > 0 || !selectedService || !selectedSlotStart) return
 
     void createCheckout({
       serviceId: selectedService.serviceId,
@@ -83,10 +126,26 @@ export function BookingForm() {
       surname: values.surname.trim(),
       email: values.email.trim(),
       amount: amountDue,
+      bookingStart: selectedSlotStart,
+      durationMinutes: BOOKING_DURATION_MINUTES,
     })
   }
 
+  const resetForm = () => {
+    setValues(initialState)
+    setPaymentType('setup')
+    setSelectedSlotStart(null)
+    reset()
+  }
+
   if (status === 'success' && result) {
+    const [bookingDatePart] = result.bookingStart.split('T')
+    const bookingDateLabel = new Date(`${bookingDatePart}T00:00:00`).toLocaleDateString('en-ZA', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })
+
     return (
       <div
         className="relative flex flex-col items-center gap-4 rounded-2xl border border-emerald-glow/30 bg-emerald-glow/[0.06] px-8 py-14 text-center"
@@ -94,11 +153,7 @@ export function BookingForm() {
       >
         <button
           type="button"
-          onClick={() => {
-            setValues(initialState)
-            setPaymentType('setup')
-            reset()
-          }}
+          onClick={resetForm}
           aria-label="Close"
           className="absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-full border border-white/15 bg-navy-950/40 text-mist-200/70 transition-colors hover:border-white/30 hover:text-emerald-glow"
         >
@@ -113,9 +168,14 @@ export function BookingForm() {
           <p className="mt-1 font-mono text-lg font-semibold text-mist-50">{result.orderId}</p>
         </div>
 
+        <div className="flex items-center gap-2 text-sm font-medium text-mist-100">
+          <Clock className="size-4 text-emerald-glow" aria-hidden="true" />
+          {bookingDateLabel} at {formatSlotTime(result.bookingStart)}
+        </div>
+
         <p className="max-w-sm text-sm leading-relaxed text-mist-200/70">
-          Amount due: {currencyFormatter.format(result.amount)} {result.currency}. A confirmation email with these
-          details has been sent to {values.email}.
+          Your time slot is reserved once payment is confirmed. Amount due: {currencyFormatter.format(result.amount)}{' '}
+          {result.currency}. A confirmation email with these details has been sent to {values.email}.
         </p>
 
         {result.paymentUrl && (
@@ -130,15 +190,7 @@ export function BookingForm() {
           </a>
         )}
 
-        <button
-          type="button"
-          onClick={() => {
-            setValues(initialState)
-            setPaymentType('setup')
-            reset()
-          }}
-          className="mt-2 text-sm font-semibold text-emerald-glow hover:underline"
-        >
+        <button type="button" onClick={resetForm} className="mt-2 text-sm font-semibold text-emerald-glow hover:underline">
           Book another service
         </button>
       </div>
@@ -182,6 +234,67 @@ export function BookingForm() {
             Try again
           </button>
         </p>
+      )}
+
+      <FormField label="Date" htmlFor="bookingDate" error={errors.bookingDate}>
+        <input
+          id="bookingDate"
+          name="bookingDate"
+          type="date"
+          min={todayDateString()}
+          value={values.bookingDate}
+          onChange={(e) => handleDateChange(e.target.value)}
+          aria-invalid={Boolean(errors.bookingDate)}
+          aria-describedby={errors.bookingDate ? 'bookingDate-error' : undefined}
+          className={inputClasses(Boolean(errors.bookingDate))}
+        />
+      </FormField>
+
+      {values.bookingDate && (
+        <FormField label="Available Times" htmlFor="bookingSlot" error={errors.slot}>
+          {slotsStatus === 'loading' && (
+            <p className="flex items-center gap-2 text-xs text-mist-200/60">
+              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+              Loading available times…
+            </p>
+          )}
+
+          {slotsStatus === 'error' && (
+            <p className="flex items-center gap-2 text-xs font-medium text-red-400">
+              <AlertCircle className="size-3.5 shrink-0" aria-hidden="true" />
+              Couldn't load available times. {slotsError}
+            </p>
+          )}
+
+          {slotsStatus === 'success' && slots.length === 0 && (
+            <p className="text-xs text-mist-200/60">No times available on this date. Try another day.</p>
+          )}
+
+          {slotsStatus === 'success' && slots.length > 0 && (
+            <div id="bookingSlot" role="radiogroup" aria-label="Available Times" className="flex flex-wrap gap-2">
+              {slots.map((slot) => (
+                <button
+                  key={slot.start}
+                  type="button"
+                  role="radio"
+                  aria-checked={selectedSlotStart === slot.start}
+                  onClick={() => {
+                    setSelectedSlotStart(slot.start)
+                    if (errors.slot) setErrors((prev) => ({ ...prev, slot: undefined }))
+                  }}
+                  className={cn(
+                    'rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-300',
+                    selectedSlotStart === slot.start
+                      ? 'border-emerald-glow/50 bg-emerald-glow/[0.12] text-emerald-glow'
+                      : 'border-white/10 bg-white/[0.02] text-mist-200/80 hover:border-white/20',
+                  )}
+                >
+                  {formatSlotTime(slot.start)}
+                </button>
+              ))}
+            </div>
+          )}
+        </FormField>
       )}
 
       <div className="grid gap-5 sm:grid-cols-2">

@@ -1,9 +1,12 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using TheAdamsParadigm.Api.Configuration;
 using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Models;
 using TheAdamsParadigm.Api.Services;
+using TheAdamsParadigm.Api.Services.CloudCalendarService;
 
 namespace TheAdamsParadigm.Api.Controllers;
 
@@ -14,17 +17,23 @@ public class PaymentsController : ControllerBase
     private readonly YocoService _yocoService;
     private readonly ApplicationDbContext _context;
     private readonly ResendService _resendService;
+    private readonly ICloudCalendarService _iCloudCalendarService;
+    private readonly BookingSettings _bookingSettings;
     private readonly ILogger<PaymentsController> _logger;
 
     public PaymentsController(
         YocoService yocoService,
         ApplicationDbContext context,
         ResendService resendService,
+        ICloudCalendarService iCloudCalendarService,
+        IOptions<BookingSettings> bookingSettings,
         ILogger<PaymentsController> logger)
     {
         _yocoService = yocoService;
         _context = context;
         _resendService = resendService;
+        _iCloudCalendarService = iCloudCalendarService;
+        _bookingSettings = bookingSettings.Value;
         _logger = logger;
     }
 
@@ -36,6 +45,32 @@ public class PaymentsController : ControllerBase
             if (request.Amount <= 0)
             {
                 return BadRequest(new { error = "Amount must be greater than zero." });
+            }
+
+            if (request.DurationMinutes <= 0)
+            {
+                return BadRequest(new { error = "Duration must be greater than zero." });
+            }
+
+            var nowInBookingTimeZone = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                ICloudCalendarService.BookingTimeZone);
+
+            if (request.BookingStart <= nowInBookingTimeZone)
+            {
+                return BadRequest(new { error = "Please select a booking time in the future." });
+            }
+
+            var bookingEnd = request.BookingStart.AddMinutes(request.DurationMinutes);
+
+            var availability = await _iCloudCalendarService.CheckAvailabilityAsync(
+                _bookingSettings.ClientApiKey,
+                request.BookingStart,
+                bookingEnd);
+
+            if (!availability.Available)
+            {
+                return Conflict(new { error = "That time slot is no longer available. Please pick another." });
             }
 
             var orderId = Guid.NewGuid().ToString();
@@ -50,7 +85,9 @@ public class PaymentsController : ControllerBase
                 Name = request.Name,
                 Surname = request.Surname,
                 Email = request.Email,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                BookingStart = request.BookingStart,
+                BookingEnd = bookingEnd
             };
 
             _context.Orders.Add(order);
@@ -98,7 +135,9 @@ public class PaymentsController : ControllerBase
                 PaymentUrl = redirectUrl,
                 Amount = order.Amount,
                 Currency = order.Currency,
-                YocoStatus = yocoStatus
+                YocoStatus = yocoStatus,
+                BookingStart = order.BookingStart!.Value,
+                BookingEnd = order.BookingEnd!.Value
             });
         }
         catch (ArgumentException ex)
@@ -111,6 +150,17 @@ public class PaymentsController : ControllerBase
             {
                 error = "Yoco API error",
                 details = ex.Message
+            });
+        }
+        catch (Exception ex) when (
+            ex is ClientNotFoundException ||
+            ex is ClientCloudCredentialsMissingException)
+        {
+            _logger.LogError(ex, "Booking calendar is not configured correctly.");
+
+            return StatusCode(502, new
+            {
+                error = "Booking calendar is currently unavailable. Please try again shortly."
             });
         }
     }

@@ -28,6 +28,13 @@
 
         public DateTime? PaidAt { get; set; }
 
+        public DateTime? BookingStart { get; set; }
+
+        public DateTime? BookingEnd { get; set; }
+
+        // UID of the iCloud calendar event created once payment succeeds.
+        public string? CalendarEventUid { get; set; }
+
         // Navigation property
         public Service? Service { get; set; }
     }
