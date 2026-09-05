@@ -97,7 +97,7 @@ namespace TheAdamsParadigm.Api.Controllers
         [HttpGet("available-slots")]
         public async Task<IActionResult> GetAvailableSlots(
             [FromQuery] DateTime date,
-            [FromQuery] int durationMinutes,
+            [FromQuery] int durationMinutes = 30,
             [FromQuery] int slotIntervalMinutes = 30)
         {
             var request = new BookingAvailabilityRequest

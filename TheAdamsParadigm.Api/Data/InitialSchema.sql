@@ -58,7 +58,7 @@ VALUES
 ('Server', 'ASP.NET / C# Development', 'Robust backend systems using modern Microsoft technologies.', 150.00, 500.00, TRUE),
 ('Database', 'Database Solutions', 'SQL Server and application data architecture.', 100.00, 500.00, TRUE),
 ('CreditCard', 'Payment Integrations', 'Payment workflows and third-party payment integrations.', 150.00, 1500.00, TRUE),
-('CalendarClock', 'Booking & Scheduling', 'Booking systems, availability logic, payments and confirmations.', 100.00, 500.00, TRUE),
+('CalendarClock', 'Booking & Scheduling', 'Booking systems, availability logic, payments and confirmations.', 200.00, 2500.00, TRUE),
 ('Sparkles', 'AI-Powered Applications', 'Practical AI integrations and intelligent application features.', 200.00, 5000.00, FALSE),
 ('CloudCog', 'Cloud & Deployment', 'Taking applications from development into reliable production environments.', 100.00, 500.00, FALSE),
 ('MessageCircle', 'Consult', 'One-on-one technical consulting to scope a new project, review an existing system, or plan next steps before committing to a build.', 100.00, 500.00, TRUE)
