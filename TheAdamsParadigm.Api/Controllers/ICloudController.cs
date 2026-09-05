@@ -5,7 +5,7 @@ using TheAdamsParadigm.Api.Services.CloudCalendarService;
 
 namespace TheAdamsParadigm.Api.Controllers
 {
-    [Route("api/icloud/{clientId:int}")]
+    [Route("api/icloud/{clientApiKey}")]
     [ApiController]
     public class ICloudController : ControllerBase
     {
@@ -18,12 +18,12 @@ namespace TheAdamsParadigm.Api.Controllers
         }
 
         [HttpGet("calendars")]
-        public async Task<IActionResult> GetCalendars(int clientId)
+        public async Task<IActionResult> GetCalendars(string clientApiKey)
         {
             try
             {
                 var calendars =
-                    await _iCloudCalendarService.DiscoverCalendarsAsync(clientId);
+                    await _iCloudCalendarService.DiscoverCalendarsAsync(clientApiKey);
 
                 return Ok(calendars);
             }
@@ -39,7 +39,7 @@ namespace TheAdamsParadigm.Api.Controllers
 
         [HttpGet("events")]
         public async Task<IActionResult> GetEvents(
-            int clientId,
+            string clientApiKey,
             [FromQuery] DateTime from,
             [FromQuery] DateTime to)
         {
@@ -47,7 +47,7 @@ namespace TheAdamsParadigm.Api.Controllers
             {
                 var events =
                     await _iCloudCalendarService.GetEventsAsync(
-                        clientId,
+                        clientApiKey,
                         from,
                         to);
 
@@ -65,13 +65,13 @@ namespace TheAdamsParadigm.Api.Controllers
 
         [HttpPost("events")]
         public async Task<IActionResult> CreateEvent(
-            int clientId,
+            string clientApiKey,
             [FromBody] CreateICloudCalendarEventRequest request)
         {
             try
             {
                 var uid =
-                    await _iCloudCalendarService.CreateEventAsync(clientId, request);
+                    await _iCloudCalendarService.CreateEventAsync(clientApiKey, request);
 
                 return Ok(new
                 {
@@ -91,14 +91,14 @@ namespace TheAdamsParadigm.Api.Controllers
 
         [HttpPut("events/{uid}")]
         public async Task<IActionResult> UpdateEvent(
-            int clientId,
+            string clientApiKey,
             string uid,
             [FromBody] UpdateICloudCalendarEventRequest request)
         {
             try
             {
                 await _iCloudCalendarService.UpdateEventAsync(
-                    clientId,
+                    clientApiKey,
                     uid,
                     request);
 
@@ -119,11 +119,11 @@ namespace TheAdamsParadigm.Api.Controllers
         }
 
         [HttpDelete("events/{uid}")]
-        public async Task<IActionResult> DeleteEvent(int clientId, string uid)
+        public async Task<IActionResult> DeleteEvent(string clientApiKey, string uid)
         {
             try
             {
-                await _iCloudCalendarService.DeleteEventAsync(clientId, uid);
+                await _iCloudCalendarService.DeleteEventAsync(clientApiKey, uid);
 
                 return Ok(new
                 {
@@ -143,7 +143,7 @@ namespace TheAdamsParadigm.Api.Controllers
 
         [HttpGet("availability")]
         public async Task<IActionResult> CheckAvailability(
-            int clientId,
+            string clientApiKey,
             [FromQuery] DateTime start,
             [FromQuery] DateTime end)
         {
@@ -151,7 +151,7 @@ namespace TheAdamsParadigm.Api.Controllers
             {
                 var result =
                     await _iCloudCalendarService.CheckAvailabilityAsync(
-                        clientId,
+                        clientApiKey,
                         start,
                         end);
 
@@ -169,7 +169,7 @@ namespace TheAdamsParadigm.Api.Controllers
 
         [HttpGet("available-slots")]
         public async Task<IActionResult> GetAvailableSlots(
-            int clientId,
+            string clientApiKey,
             [FromQuery] DateTime date,
             [FromQuery] int durationMinutes = 30,
             [FromQuery] int slotIntervalMinutes = 30)
@@ -189,7 +189,7 @@ namespace TheAdamsParadigm.Api.Controllers
             {
                 var slots =
                     await _iCloudCalendarService
-                        .GetAvailableSlotsAsync(clientId, request);
+                        .GetAvailableSlotsAsync(clientApiKey, request);
 
                 return Ok(slots);
             }
