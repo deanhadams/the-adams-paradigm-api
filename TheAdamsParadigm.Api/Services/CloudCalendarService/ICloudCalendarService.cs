@@ -66,6 +66,23 @@ namespace TheAdamsParadigm.Api.Services.CloudCalendarService
                     $"{client.ICloudEmail}:{password}"));
         }
 
+        // Which calendar to book against is per client now, not a hardcoded "Bookings".
+        private async Task<string> GetBookingCalendarNameAsync(int clientId)
+        {
+            var calendarName = await _dbContext.Clients
+                .AsNoTracking()
+                .Where(c => c.ClientId == clientId)
+                .Select(c => (string?)c.ICloudCalendar)
+                .FirstOrDefaultAsync();
+
+            if (calendarName == null)
+            {
+                throw new ClientNotFoundException(clientId);
+            }
+
+            return string.IsNullOrWhiteSpace(calendarName) ? "Bookings" : calendarName;
+        }
+
         private async Task<ICloudCalendar> GetBookingCalendarAsync(int clientId)
         {
             // Fast path:
@@ -94,17 +111,18 @@ namespace TheAdamsParadigm.Api.Services.CloudCalendarService
                     "Booking calendar not cached. Discovering calendars...");
 
                 var calendars = await DiscoverCalendarsAsync(clientId);
+                var calendarName = await GetBookingCalendarNameAsync(clientId);
 
                 var bookingCalendar = calendars
                     .FirstOrDefault(x =>
                         x.Name.Equals(
-                            "Bookings",
+                            calendarName,
                             StringComparison.OrdinalIgnoreCase));
 
                 if (bookingCalendar == null)
                 {
                     throw new InvalidOperationException(
-                        $"iCloud calendar 'Bookings' was not found for client {clientId}.");
+                        $"iCloud calendar '{calendarName}' was not found for client {clientId}.");
                 }
 
                 _bookingCalendars[clientId] = bookingCalendar;

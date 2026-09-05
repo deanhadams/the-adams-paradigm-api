@@ -60,6 +60,9 @@ public class ClientsController : ControllerBase
             Website = request.Website.Trim(),
             Email = request.Email.Trim(),
             ICloudEmail = request.ICloudEmail.Trim(),
+            ICloudCalendar = string.IsNullOrWhiteSpace(request.ICloudCalendar)
+                ? "Bookings"
+                : request.ICloudCalendar.Trim(),
             ICloudPassword = string.IsNullOrEmpty(request.ICloudPassword)
                 ? string.Empty
                 : _credentialProtector.Protect(request.ICloudPassword),
@@ -91,6 +94,9 @@ public class ClientsController : ControllerBase
         client.Website = request.Website.Trim();
         client.Email = request.Email.Trim();
         client.ICloudEmail = request.ICloudEmail.Trim();
+        client.ICloudCalendar = string.IsNullOrWhiteSpace(request.ICloudCalendar)
+            ? "Bookings"
+            : request.ICloudCalendar.Trim();
 
         // Only touch the stored password if a new one was actually provided —
         // an empty/omitted value means "leave it as is," not "clear it."
@@ -129,6 +135,7 @@ public class ClientsController : ControllerBase
         Website = client.Website,
         Email = client.Email,
         ICloudEmail = client.ICloudEmail,
+        ICloudCalendar = client.ICloudCalendar,
         ClientApiKey = client.ClientApiKey,
     };
 }

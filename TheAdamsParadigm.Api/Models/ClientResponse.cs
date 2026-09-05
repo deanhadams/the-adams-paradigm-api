@@ -12,6 +12,8 @@ namespace TheAdamsParadigm.Api.Models
 
         public string ICloudEmail { get; set; } = string.Empty;
 
+        public string ICloudCalendar { get; set; } = string.Empty;
+
         public string ClientApiKey { get; set; } = string.Empty;
 
         // ICloudPassword is deliberately never included here, even encrypted —

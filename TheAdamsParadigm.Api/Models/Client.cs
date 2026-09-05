@@ -22,5 +22,10 @@ namespace TheAdamsParadigm.Api.Models
         public string ICloudPassword { get; set; } = string.Empty;
 
         public string ClientApiKey { get; set; } = string.Empty;
+
+        // Name of this client's iCloud calendar to book against (e.g. "Bookings").
+        // ICloudCalendarService reads this instead of assuming every client's calendar
+        // is literally named "Bookings".
+        public string ICloudCalendar { get; set; } = "Bookings";
     }
 }

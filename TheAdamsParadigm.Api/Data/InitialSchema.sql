@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS clients (
     email TEXT NOT NULL,
     icloud_email TEXT NOT NULL DEFAULT '',
     icloud_password TEXT NOT NULL DEFAULT '',
+    icloud_calendar TEXT NOT NULL DEFAULT '',
     client_api_key TEXT NOT NULL
 );
 

@@ -126,6 +126,7 @@ namespace TheAdamsParadigm.Api.Data
                 entity.Property(e => e.Email).HasColumnName("email").IsRequired();
                 entity.Property(e => e.ICloudEmail).HasColumnName("icloud_email");
                 entity.Property(e => e.ICloudPassword).HasColumnName("icloud_password");
+                entity.Property(e => e.ICloudCalendar).HasColumnName("icloud_calendar").IsRequired().HasDefaultValue("Bookings");
                 entity.Property(e => e.ClientApiKey).HasColumnName("client_api_key").IsRequired();
 
                 entity.HasIndex(e => e.ClientApiKey).IsUnique().HasDatabaseName("idx_clients_client_api_key");
