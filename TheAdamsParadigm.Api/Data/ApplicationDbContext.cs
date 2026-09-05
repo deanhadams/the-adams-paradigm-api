@@ -12,6 +12,7 @@ namespace TheAdamsParadigm.Api.Data
 
         public DbSet<Order> Orders { get; set; }
         public DbSet<Service> Services { get; set; }
+        public DbSet<UserMemory> UserMemories { get; set; }
 
         // Npgsql rejects Kind=Utc DateTimes against "timestamp without time zone" columns;
         // strip the Kind on write and re-tag reads as UTC since that's what we always store.
@@ -30,6 +31,7 @@ namespace TheAdamsParadigm.Api.Data
             // Map entities to specific table names used in SQL script
             modelBuilder.Entity<Order>().ToTable("orders");
             modelBuilder.Entity<Service>().ToTable("services");
+            modelBuilder.Entity<UserMemory>().ToTable("user_memories");
 
             // Configure Order entity
             modelBuilder.Entity<Order>(entity =>
@@ -72,6 +74,22 @@ namespace TheAdamsParadigm.Api.Data
                 entity.Property(e => e.CostPerHour).HasColumnName("cost_per_hour").HasPrecision(18, 2);
                 entity.Property(e => e.SetupFee).HasColumnName("setup_fee").HasPrecision(18, 2);
                 entity.Property(e => e.IsBookable).HasColumnName("is_bookable");
+            });
+
+            // Configure UserMemory entity
+            modelBuilder.Entity<UserMemory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id").UseIdentityColumn();
+                entity.Property(e => e.ChatUserId).HasColumnName("chat_user_id").IsRequired();
+                entity.Property(e => e.Category).HasColumnName("category").IsRequired();
+                entity.Property(e => e.Text).HasColumnName("text").IsRequired();
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp without time zone")
+                    .HasConversion(UtcDateTimeConverter);
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasColumnType("timestamp without time zone")
+                    .HasConversion(UtcDateTimeConverter);
+
+                entity.HasIndex(e => e.ChatUserId).HasDatabaseName("idx_user_memories_chat_user_id");
             });
         }
     }

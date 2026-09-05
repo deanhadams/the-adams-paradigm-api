@@ -47,19 +47,35 @@ CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 -- Enables efficient sorting and filtering by creation date
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
 
+-- Create the user_memories table
+-- Stores durable facts extracted from AI chatbot conversations, keyed by the
+-- client-generated ChatUserId (see X-Chat-User-Id header on /api/ai/chat).
+CREATE TABLE IF NOT EXISTS user_memories (
+    id SERIAL PRIMARY KEY,
+    chat_user_id TEXT NOT NULL,
+    category TEXT NOT NULL,
+    text TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index on chat_user_id for fast lookups when fetching or deleting
+-- a visitor's stored memory
+CREATE INDEX IF NOT EXISTS idx_user_memories_chat_user_id ON user_memories(chat_user_id);
+
 -- Insert seed data into services table
 INSERT INTO services (icon, title, description, cost_per_hour, setup_fee, is_bookable)
 VALUES
-('Globe', 'Basic Website', 'A polished three-page website built to make a strong first impression — clean, focused design with no added integrations.', 100.00, 2500.00, TRUE),
-('Layers', 'Full-Stack Web Development', 'Modern responsive applications built around real business requirements.', 100.00, 500.00, TRUE),
-('Wrench', 'Custom Software', 'Purpose-built applications designed around a company''s workflow.', 150.00, 500.00, TRUE),
+('Globe', 'Basic Website', 'A polished three-page website built to make a strong first impression — clean, focused design with no added integrations.', 100.00, 2000.00, TRUE),
+('Layers', 'Full-Stack Web Development', 'Modern responsive applications built around real business requirements.', 100.00, 3500.00, TRUE),
+('Wrench', 'Custom Software', 'Purpose-built applications designed around a company''s workflow.', 250.00, 5000.00, TRUE),
 ('Plug', 'API Development', 'Secure and maintainable APIs and backend systems.', 100.00, 500.00, FALSE),
-('Atom', 'React Applications', 'Fast, modern and interactive frontend experiences.', 100.00, 500.00, TRUE),
-('Server', 'ASP.NET / C# Development', 'Robust backend systems using modern Microsoft technologies.', 150.00, 500.00, TRUE),
+('Atom', 'React Applications', 'Fast, modern and interactive frontend experiences.', 100.00, 500.00, FALSE),
+('Server', 'ASP.NET / C# Development', 'Robust backend systems using modern Microsoft technologies.', 150.00, 500.00, FALSE),
 ('Database', 'Database Solutions', 'SQL Server and application data architecture.', 100.00, 500.00, TRUE),
 ('CreditCard', 'Payment Integrations', 'Payment workflows and third-party payment integrations.', 150.00, 1500.00, TRUE),
 ('CalendarClock', 'Booking & Scheduling', 'Booking systems, availability logic, payments and confirmations.', 200.00, 2500.00, TRUE),
-('Sparkles', 'AI-Powered Applications', 'Practical AI integrations and intelligent application features.', 200.00, 5000.00, FALSE),
+('Sparkles', 'AI-Powered Applications', 'Practical AI integrations and intelligent application features.', 250.00, 5000.00, FALSE),
 ('CloudCog', 'Cloud & Deployment', 'Taking applications from development into reliable production environments.', 100.00, 500.00, FALSE),
 ('MessageCircle', 'Consult', 'One-on-one technical consulting to scope a new project, review an existing system, or plan next steps before committing to a build.', 100.00, 500.00, TRUE)
 

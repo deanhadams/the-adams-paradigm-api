@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using TheAdamsParadigm.Api.Configuration;
+using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Models;
 
 namespace TheAdamsParadigm.Api.Services;
@@ -12,22 +14,29 @@ public class ClaudeService
     private readonly AnthropicSettings _settings;
     private readonly KnowledgeSearchService _knowledgeSearchService;
     private readonly ProjectDiscoveryService _projectDiscoveryService;
+    private readonly ApplicationDbContext _dbContext;
+    private readonly MemoryExtractionService _memoryExtractionService;
 
     public ClaudeService(
         HttpClient httpClient,
         IOptions<AnthropicSettings> settings,
         KnowledgeSearchService knowledgeSearchService,
-        ProjectDiscoveryService projectDiscoveryService)
+        ProjectDiscoveryService projectDiscoveryService,
+        ApplicationDbContext dbContext,
+        MemoryExtractionService memoryExtractionService)
     {
         _httpClient = httpClient;
         _settings = settings.Value;
         _knowledgeSearchService = knowledgeSearchService;
         _projectDiscoveryService = projectDiscoveryService;
+        _dbContext = dbContext;
+        _memoryExtractionService = memoryExtractionService;
     }
 
     public async Task<string> AskClaudeAsync(
         string question,
-        List<ChatMessage> history)
+        List<ChatMessage> history,
+        string? chatUserId)
     {
         // =========================================================
         // 1. Search the knowledge base
@@ -44,6 +53,36 @@ public class ClaudeService
         var discoveryPrompt =
             _projectDiscoveryService.BuildDiscoveryPrompt(
                 discovery);
+
+        // =========================================================
+        // 1b. Fetch stored visitor memory (if we have an ID for them)
+        // =========================================================
+
+        var memoryFacts = string.IsNullOrWhiteSpace(chatUserId)
+            ? []
+            : await _dbContext.UserMemories
+                .Where(m => m.ChatUserId == chatUserId)
+                .OrderByDescending(m => m.UpdatedAt)
+                .Take(30)
+                .ToListAsync();
+
+        var memorySection = memoryFacts.Count == 0
+            ? ""
+            : $"""
+                ========================================================
+                VISITOR MEMORY
+                ========================================================
+
+                These are facts previously remembered about this visitor:
+
+                {string.Join("\n", memoryFacts.Select(f => $"- [{f.Category}] {f.Text}"))}
+
+                Use these only when relevant to the current question. Never say
+                "according to my memory" or reference that you're recalling stored
+                facts — just use them naturally, the way a person who remembered
+                would. If anything the visitor says now conflicts with a stored
+                fact, trust what they're saying now.
+                """;
 
         // =========================================================
         // 2. Get relevant knowledge
@@ -336,6 +375,8 @@ public class ClaudeService
 
             {discoveryPrompt}
 
+            {memorySection}
+
             ========================================================
             FINAL INSTRUCTION
             ========================================================
@@ -394,7 +435,14 @@ public class ClaudeService
         var request = new
         {
             model = "claude-sonnet-5",
-            max_tokens = 500,
+            max_tokens = 1024,
+            // Sonnet 5 runs adaptive thinking by default when this is omitted, which can
+            // consume the entire max_tokens budget on thinking before any visible text is
+            // produced (observed in practice: HTTP 200, content = [thinking block only],
+            // stop_reason "max_tokens"). This service makes no tool calls, so the one
+            // documented failure mode of disabling thinking (a tool call leaking into
+            // visible text) doesn't apply here.
+            thinking = new { type = "disabled" },
             system = systemPrompt,
             messages
         };
@@ -519,6 +567,20 @@ public class ClaudeService
 
             if (!string.IsNullOrWhiteSpace(answer))
             {
+                if (!string.IsNullOrWhiteSpace(chatUserId))
+                {
+                    var conversationForExtraction = new List<ChatMessage>(recentHistory)
+                    {
+                        new() { Role = "user", Content = question },
+                        new() { Role = "assistant", Content = answer },
+                    };
+
+                    if ((conversationForExtraction.Count) % 6 == 0)
+                    {
+                        _ = _memoryExtractionService.ExtractAndStoreAsync(chatUserId, conversationForExtraction);
+                    }
+                }
+
                 return answer;
             }
 

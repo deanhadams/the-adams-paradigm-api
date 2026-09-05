@@ -17,7 +17,7 @@ const SUGGESTED_QUESTIONS = [
 
 export function AiChat() {
   const [isOpen, setIsOpen] = useState(false)
-  const { messages, isSending, sendMessage } = useAiChat()
+  const { messages, isSending, isClearing, sendMessage, clearMemory } = useAiChat()
   const scrollAnchorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -103,6 +103,18 @@ export function AiChat() {
           {isSending && <TypingIndicator />}
 
           <div ref={scrollAnchorRef} />
+        </div>
+
+        <div className="shrink-0 border-t border-white/10 px-4 py-2 text-center text-[11px] leading-relaxed text-mist-200/40">
+          This assistant remembers details from our conversations to help future chats.{' '}
+          <button
+            type="button"
+            onClick={clearMemory}
+            disabled={isClearing}
+            className="font-medium text-mist-200/60 underline decoration-dotted underline-offset-2 transition-colors hover:text-emerald-glow disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isClearing ? 'Clearing…' : 'Clear my data'}
+          </button>
         </div>
 
         <ChatInput disabled={isSending} onSend={sendMessage} />

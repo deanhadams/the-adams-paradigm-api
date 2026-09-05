@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { getChatUserId } from '../lib/chatUserId'
 import { API_BASE_URL } from '../lib/config'
 
 export interface ChatMessage {
@@ -12,12 +13,15 @@ const FALLBACK_ERROR_MESSAGE =
 interface UseAiChatResult {
   messages: ChatMessage[]
   isSending: boolean
+  isClearing: boolean
   sendMessage: (text: string) => Promise<void>
+  clearMemory: () => Promise<void>
 }
 
 export function useAiChat(): UseAiChatResult {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isSending, setIsSending] = useState(false)
+  const [isClearing, setIsClearing] = useState(false)
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -48,6 +52,7 @@ export function useAiChat(): UseAiChatResult {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'X-Chat-User-Id': getChatUserId(),
           },
           body: JSON.stringify({
             message: trimmed,
@@ -95,9 +100,33 @@ export function useAiChat(): UseAiChatResult {
     [isSending, messages],
   )
 
+  const clearMemory = useCallback(async () => {
+    setIsClearing(true)
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/ai/memory`, {
+        method: 'DELETE',
+        headers: {
+          'X-Chat-User-Id': getChatUserId(),
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`)
+      }
+    } catch (err) {
+      console.error('Failed to clear stored memory:', err)
+    } finally {
+      setMessages([])
+      setIsClearing(false)
+    }
+  }, [])
+
   return {
     messages,
     isSending,
+    isClearing,
     sendMessage,
+    clearMemory,
   }
 }

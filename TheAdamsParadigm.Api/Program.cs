@@ -87,6 +87,11 @@ builder.Services.AddHttpClient<ClaudeService>(client =>
     client.BaseAddress = new Uri("https://api.anthropic.com/");
 });
 
+builder.Services.AddHttpClient<MemoryExtractionService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.anthropic.com/");
+});
+
 var app = builder.Build();
 
 // Apply migrations and seed database on startup
