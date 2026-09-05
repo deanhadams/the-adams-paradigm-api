@@ -63,6 +63,49 @@ CREATE TABLE IF NOT EXISTS user_memories (
 -- a visitor's stored memory
 CREATE INDEX IF NOT EXISTS idx_user_memories_chat_user_id ON user_memories(chat_user_id);
 
+-- Enable pgvector for the knowledge base's embedding column below
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Create the knowledge_chunks table
+-- One row per business section/project/FAQ chunk from Data/knowledge-base.json, embedded
+-- with Voyage AI (voyage-3.5, 1024 dimensions). KnowledgeSearchService does cosine-
+-- similarity retrieval over this table; POST /api/knowledge/reseed regenerates it.
+CREATE TABLE IF NOT EXISTS knowledge_chunks (
+    id SERIAL PRIMARY KEY,
+    section TEXT NOT NULL,
+    content TEXT NOT NULL,
+    embedding VECTOR(1024) NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create the clients table
+-- icloud_password is application-level encrypted (ASP.NET Core Data Protection via
+-- ClientCredentialProtector) before it ever reaches this column — never plaintext.
+CREATE TABLE IF NOT EXISTS clients (
+    client_id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    website TEXT NOT NULL DEFAULT '',
+    email TEXT NOT NULL,
+    icloud_email TEXT NOT NULL DEFAULT '',
+    icloud_password TEXT NOT NULL DEFAULT '',
+    client_api_key TEXT NOT NULL
+);
+
+-- Create unique index on client_api_key for fast, unambiguous lookup during
+-- per-client request authentication
+CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_client_api_key ON clients(client_api_key);
+
+-- Create the DataProtectionKeys table
+-- ASP.NET Core Data Protection's key ring, persisted here (via
+-- ApplicationDbContext : IDataProtectionKeyContext) instead of local disk so it survives
+-- Railway redeploys — losing these keys would permanently break decryption of anything
+-- already encrypted with them (e.g. clients.icloud_password).
+CREATE TABLE IF NOT EXISTS "DataProtectionKeys" (
+    "Id" SERIAL PRIMARY KEY,
+    "FriendlyName" TEXT,
+    "Xml" TEXT
+);
+
 -- Insert seed data into services table
 INSERT INTO services (icon, title, description, cost_per_hour, setup_fee, is_bookable)
 VALUES

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -26,6 +27,14 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString, o => o.UseVector()));
+
+// Persist Data Protection keys to Postgres rather than local disk, which is wiped on
+// every Railway redeploy — losing the key ring would permanently break decryption of
+// anything already encrypted with it (e.g. Client.ICloudPassword).
+builder.Services.AddDataProtection()
+    .PersistKeysToDbContext<ApplicationDbContext>();
+
+builder.Services.AddSingleton<ClientCredentialProtector>();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -118,7 +127,7 @@ using (var scope = app.Services.CreateScope())
     {
         // Apply any pending migrations
         await dbContext.Database.MigrateAsync();
-        
+
         // Seed the database
         //await seedService.SeedDatabaseAsync();
     }

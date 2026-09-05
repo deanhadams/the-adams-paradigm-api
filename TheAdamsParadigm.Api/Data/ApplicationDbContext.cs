@@ -1,10 +1,15 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TheAdamsParadigm.Api.Models;
 
 namespace TheAdamsParadigm.Api.Data
 {
-    public class ApplicationDbContext : DbContext
+    // IDataProtectionKeyContext lets ASP.NET Core's Data Protection API persist its key
+    // ring to this same Postgres database (via the DataProtectionKeys table below) instead
+    // of local disk, which would be wiped on every Railway redeploy — losing the keys would
+    // permanently break decryption of anything already encrypted (e.g. Client.ICloudPassword).
+    public class ApplicationDbContext : DbContext, IDataProtectionKeyContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
@@ -14,6 +19,8 @@ namespace TheAdamsParadigm.Api.Data
         public DbSet<Service> Services { get; set; }
         public DbSet<UserMemory> UserMemories { get; set; }
         public DbSet<KnowledgeChunk> KnowledgeChunks { get; set; }
+        public DbSet<Client> Clients { get; set; }
+        public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
         // Npgsql rejects Kind=Utc DateTimes against "timestamp without time zone" columns;
         // strip the Kind on write and re-tag reads as UTC since that's what we always store.
@@ -36,6 +43,7 @@ namespace TheAdamsParadigm.Api.Data
             modelBuilder.Entity<Service>().ToTable("services");
             modelBuilder.Entity<UserMemory>().ToTable("user_memories");
             modelBuilder.Entity<KnowledgeChunk>().ToTable("knowledge_chunks");
+            modelBuilder.Entity<Client>().ToTable("clients");
 
             // Configure Order entity
             modelBuilder.Entity<Order>(entity =>
@@ -106,6 +114,21 @@ namespace TheAdamsParadigm.Api.Data
                 entity.Property(e => e.Embedding).HasColumnName("embedding").HasColumnType("vector(1024)");
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp without time zone")
                     .HasConversion(UtcDateTimeConverter);
+            });
+
+            // Configure Client entity
+            modelBuilder.Entity<Client>(entity =>
+            {
+                entity.HasKey(e => e.ClientId);
+                entity.Property(e => e.ClientId).HasColumnName("client_id").UseIdentityColumn();
+                entity.Property(e => e.Name).HasColumnName("name").IsRequired();
+                entity.Property(e => e.Website).HasColumnName("website");
+                entity.Property(e => e.Email).HasColumnName("email").IsRequired();
+                entity.Property(e => e.ICloudEmail).HasColumnName("icloud_email");
+                entity.Property(e => e.ICloudPassword).HasColumnName("icloud_password");
+                entity.Property(e => e.ClientApiKey).HasColumnName("client_api_key").IsRequired();
+
+                entity.HasIndex(e => e.ClientApiKey).IsUnique().HasDatabaseName("idx_clients_client_api_key");
             });
         }
     }
