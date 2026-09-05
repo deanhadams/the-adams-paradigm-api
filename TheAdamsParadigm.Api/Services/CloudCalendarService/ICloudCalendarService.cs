@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Xml.Linq;
 using TheAdamsParadigm.Api.Configuration;
 using TheAdamsParadigm.Api.Models.Calendar;
 
@@ -647,6 +648,118 @@ END:VCALENDAR
                     $"{response.StatusCode}. " +
                     $"Response: {responseBody}");
             }
+        }
+
+        public async Task<ICloudAvailabilityResponse> CheckAvailabilityAsync(
+            DateTime start,
+            DateTime end)
+        {
+            if (end <= start)
+            {
+                throw new ArgumentException(
+                    "End time must be after start time.");
+            }
+
+            // Get the events that occur during the requested period.
+            var events = await GetEventsAsync(start, end);
+
+            // Check for overlapping events.
+            var conflicts = events
+                .Where(existingEvent =>
+                    existingEvent.Start < end &&
+                    existingEvent.End > start)
+                .ToList();
+
+            return new ICloudAvailabilityResponse
+            {
+                Available = conflicts.Count == 0,
+                Start = start,
+                End = end,
+                Conflicts = conflicts
+            };
+        }
+
+        public async Task<List<AvailableBookingSlot>>
+            GetAvailableSlotsAsync(BookingAvailabilityRequest request)
+        {
+            if (request.DurationMinutes <= 0)
+            {
+                throw new ArgumentException(
+                    "Duration must be greater than zero.");
+            }
+
+            if (request.SlotIntervalMinutes <= 0)
+            {
+                throw new ArgumentException(
+                    "Slot interval must be greater than zero.");
+            }
+
+            if (request.BusinessEnd <= request.BusinessStart)
+            {
+                throw new ArgumentException(
+                    "Business end time must be after business start time.");
+            }
+
+            // ---------------------------------------------------------
+            // Build the start/end of the working day
+            // ---------------------------------------------------------
+
+            var dayStart =
+                request.Date.Date +
+                request.BusinessStart;
+
+            var dayEnd =
+                request.Date.Date +
+                request.BusinessEnd;
+
+            // ---------------------------------------------------------
+            // Retrieve all iCloud events for the working day
+            // ---------------------------------------------------------
+
+            var events = await GetEventsAsync(
+                dayStart,
+                dayEnd);
+
+            var availableSlots =
+                new List<AvailableBookingSlot>();
+
+            // ---------------------------------------------------------
+            // Generate possible slots
+            // ---------------------------------------------------------
+
+            var slotStart = dayStart;
+
+            while (slotStart.AddMinutes(
+                       request.DurationMinutes) <= dayEnd)
+            {
+                var slotEnd =
+                    slotStart.AddMinutes(
+                        request.DurationMinutes);
+
+                // -----------------------------------------------------
+                // Check whether this slot overlaps an existing event
+                // -----------------------------------------------------
+
+                var hasConflict = events.Any(existingEvent =>
+                    existingEvent.Start < slotEnd &&
+                    existingEvent.End > slotStart);
+
+                if (!hasConflict)
+                {
+                    availableSlots.Add(
+                        new AvailableBookingSlot
+                        {
+                            Start = slotStart,
+                            End = slotEnd
+                        });
+                }
+
+                slotStart =
+                    slotStart.AddMinutes(
+                        request.SlotIntervalMinutes);
+            }
+
+            return availableSlots;
         }
 
         private static string ToCalDavDateTime(DateTime dateTime)

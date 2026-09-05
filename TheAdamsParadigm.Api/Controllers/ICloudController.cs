@@ -80,5 +80,42 @@ namespace TheAdamsParadigm.Api.Controllers
                 uid
             });
         }
+
+        [HttpGet("availability")]
+        public async Task<IActionResult> CheckAvailability(
+            [FromQuery] DateTime start,
+            [FromQuery] DateTime end)
+        {
+            var result =
+                await _iCloudCalendarService.CheckAvailabilityAsync(
+                    start,
+                    end);
+
+            return Ok(result);
+        }
+
+        [HttpGet("available-slots")]
+        public async Task<IActionResult> GetAvailableSlots(
+            [FromQuery] DateTime date,
+            [FromQuery] int durationMinutes,
+            [FromQuery] int slotIntervalMinutes = 30)
+        {
+            var request = new BookingAvailabilityRequest
+            {
+                Date = date,
+                DurationMinutes = durationMinutes,
+                SlotIntervalMinutes = slotIntervalMinutes,
+
+                // Temporary development hours
+                BusinessStart = new TimeSpan(9, 0, 0),
+                BusinessEnd = new TimeSpan(17, 0, 0)
+            };
+
+            var slots =
+                await _iCloudCalendarService
+                    .GetAvailableSlotsAsync(request);
+
+            return Ok(slots);
+        }
     }
 }
