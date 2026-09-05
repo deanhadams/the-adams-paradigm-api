@@ -80,7 +80,9 @@ builder.Services.AddTransient<ICloudCalendarService>(sp =>
     var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
     var httpClient = httpClientFactory.CreateClient(nameof(ICloudCalendarService));
     var settings = sp.GetRequiredService<IOptions<ICloudSettings>>().Value;
-    return new ICloudCalendarService(httpClient, settings);
+    var dbContext = sp.GetRequiredService<ApplicationDbContext>();
+    var credentialProtector = sp.GetRequiredService<ClientCredentialProtector>();
+    return new ICloudCalendarService(httpClient, settings, dbContext, credentialProtector);
 });
 
 builder.Services.Configure<ResendSettings>(

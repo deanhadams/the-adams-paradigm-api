@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 using System.Xml.Linq;
 using TheAdamsParadigm.Api.Configuration;
+using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Models.Calendar;
 
 namespace TheAdamsParadigm.Api.Services.CloudCalendarService
@@ -9,8 +12,16 @@ namespace TheAdamsParadigm.Api.Services.CloudCalendarService
     {
         private readonly HttpClient _httpClient;
         private readonly ICloudSettings _settings;
-        private ICloudCalendar? _bookingCalendar;
-        private readonly SemaphoreSlim _bookingCalendarLock = new(1, 1);
+        private readonly ApplicationDbContext _dbContext;
+        private readonly ClientCredentialProtector _credentialProtector;
+
+        // Booking calendar discovery is cached per client (each client has their own
+        // iCloud account and therefore their own calendar set), keyed by ClientId. One
+        // discovery lock per client too, so concurrent requests for different clients
+        // don't serialize behind each other.
+        private readonly ConcurrentDictionary<int, ICloudCalendar> _bookingCalendars = new();
+        private readonly ConcurrentDictionary<int, SemaphoreSlim> _bookingCalendarLocks = new();
+
         private static readonly TimeZoneInfo BookingTimeZone =
             TimeZoneInfo.FindSystemTimeZoneById(
                 OperatingSystem.IsWindows()
@@ -19,23 +30,54 @@ namespace TheAdamsParadigm.Api.Services.CloudCalendarService
 
         public ICloudCalendarService(
             HttpClient httpClient,
-            ICloudSettings settings)
+            ICloudSettings settings,
+            ApplicationDbContext dbContext,
+            ClientCredentialProtector credentialProtector)
         {
             _httpClient = httpClient;
             _settings = settings;
+            _dbContext = dbContext;
+            _credentialProtector = credentialProtector;
         }
 
-        private async Task<ICloudCalendar> GetBookingCalendarAsync()
+        // Resolves a client's iCloud username/password (decrypting the stored password)
+        // and Base64-encodes them for a Basic auth header — this replaces the old
+        // single global ICloudSettings.Username/Password.
+        private async Task<string> GetBasicAuthCredentialsAsync(int clientId)
+        {
+            var client = await _dbContext.Clients
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.ClientId == clientId);
+
+            if (client == null)
+            {
+                throw new ClientNotFoundException(clientId);
+            }
+
+            if (string.IsNullOrWhiteSpace(client.ICloudEmail) || string.IsNullOrWhiteSpace(client.ICloudPassword))
+            {
+                throw new ClientCloudCredentialsMissingException(clientId);
+            }
+
+            var password = _credentialProtector.Unprotect(client.ICloudPassword);
+
+            return Convert.ToBase64String(
+                System.Text.Encoding.UTF8.GetBytes(
+                    $"{client.ICloudEmail}:{password}"));
+        }
+
+        private async Task<ICloudCalendar> GetBookingCalendarAsync(int clientId)
         {
             // Fast path:
             // The calendar has already been discovered.
-            if (_bookingCalendar != null)
+            if (_bookingCalendars.TryGetValue(clientId, out var cachedCalendar))
             {
-                return _bookingCalendar;
+                return cachedCalendar;
             }
 
-            // Only one request is allowed to perform discovery.
-            await _bookingCalendarLock.WaitAsync();
+            // Only one request per client is allowed to perform discovery.
+            var calendarLock = _bookingCalendarLocks.GetOrAdd(clientId, _ => new SemaphoreSlim(1, 1));
+            await calendarLock.WaitAsync();
 
             try
             {
@@ -43,15 +85,15 @@ namespace TheAdamsParadigm.Api.Services.CloudCalendarService
                 //
                 // Another request may have discovered and cached
                 // the calendar while this request was waiting.
-                if (_bookingCalendar != null)
+                if (_bookingCalendars.TryGetValue(clientId, out cachedCalendar))
                 {
-                    return _bookingCalendar;
+                    return cachedCalendar;
                 }
 
                 Console.WriteLine(
                     "Booking calendar not cached. Discovering calendars...");
 
-                var calendars = await DiscoverCalendarsAsync();
+                var calendars = await DiscoverCalendarsAsync(clientId);
 
                 var bookingCalendar = calendars
                     .FirstOrDefault(x =>
@@ -62,27 +104,25 @@ namespace TheAdamsParadigm.Api.Services.CloudCalendarService
                 if (bookingCalendar == null)
                 {
                     throw new InvalidOperationException(
-                        "iCloud calendar 'Booking' was not found.");
+                        $"iCloud calendar 'Bookings' was not found for client {clientId}.");
                 }
 
-                _bookingCalendar = bookingCalendar;
+                _bookingCalendars[clientId] = bookingCalendar;
 
                 Console.WriteLine(
-                    $"Booking calendar cached: {_bookingCalendar.Url}");
+                    $"Booking calendar cached: {bookingCalendar.Url}");
 
-                return _bookingCalendar;
+                return bookingCalendar;
             }
             finally
             {
-                _bookingCalendarLock.Release();
+                calendarLock.Release();
             }
         }
 
-        public async Task<List<ICloudCalendar>> DiscoverCalendarsAsync()
+        public async Task<List<ICloudCalendar>> DiscoverCalendarsAsync(int clientId)
         {
-            var credentials = Convert.ToBase64String(
-                System.Text.Encoding.UTF8.GetBytes(
-                    $"{_settings.Username}:{_settings.Password}"));
+            var credentials = await GetBasicAuthCredentialsAsync(clientId);
 
             // =========================================================
             // STEP 1 — Discover current-user-principal
@@ -371,18 +411,17 @@ namespace TheAdamsParadigm.Api.Services.CloudCalendarService
         }
 
         public async Task<List<ICloudCalendarEvent>> GetEventsAsync(
+            int clientId,
             DateTime from,
             DateTime to)
         {
-            var credentials = Convert.ToBase64String(
-                System.Text.Encoding.UTF8.GetBytes(
-                    $"{_settings.Username}:{_settings.Password}"));
+            var credentials = await GetBasicAuthCredentialsAsync(clientId);
 
             // =========================================================
             // STEP 1 — Discover the Booking calendar
             // =========================================================
 
-            var bookingCalendar =  await GetBookingCalendarAsync();
+            var bookingCalendar = await GetBookingCalendarAsync(clientId);
 
             Console.WriteLine($"Using Booking calendar: {bookingCalendar.Url}");
 
@@ -496,9 +535,10 @@ namespace TheAdamsParadigm.Api.Services.CloudCalendarService
         }
 
         public async Task<string> CreateEventAsync(
+            int clientId,
             CreateICloudCalendarEventRequest request)
         {
-            var bookingCalendar = await GetBookingCalendarAsync();
+            var bookingCalendar = await GetBookingCalendarAsync(clientId);
 
             var uid = $"{Guid.NewGuid()}@theadamsparadigm";
 
@@ -525,9 +565,7 @@ END:VCALENDAR
                 HttpMethod.Put,
                 eventUrl);
 
-            var credentials = Convert.ToBase64String(
-                System.Text.Encoding.UTF8.GetBytes(
-                    $"{_settings.Username}:{_settings.Password}"));
+            var credentials = await GetBasicAuthCredentialsAsync(clientId);
 
             httpRequest.Headers.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue(
@@ -556,10 +594,11 @@ END:VCALENDAR
         }
 
         public async Task UpdateEventAsync(
+            int clientId,
             string uid,
             UpdateICloudCalendarEventRequest request)
         {
-            var bookingCalendar = await GetBookingCalendarAsync();
+            var bookingCalendar = await GetBookingCalendarAsync(clientId);
 
             var eventUrl =
                 $"{bookingCalendar.Url.TrimEnd('/')}/{uid}.ics";
@@ -584,9 +623,7 @@ END:VCALENDAR
                 HttpMethod.Put,
                 eventUrl);
 
-            var credentials = Convert.ToBase64String(
-                System.Text.Encoding.UTF8.GetBytes(
-                    $"{_settings.Username}:{_settings.Password}"));
+            var credentials = await GetBasicAuthCredentialsAsync(clientId);
 
             httpRequest.Headers.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue(
@@ -614,9 +651,9 @@ END:VCALENDAR
             }
         }
 
-        public async Task DeleteEventAsync(string uid)
+        public async Task DeleteEventAsync(int clientId, string uid)
         {
-            var bookingCalendar = await GetBookingCalendarAsync();
+            var bookingCalendar = await GetBookingCalendarAsync(clientId);
 
             var eventUrl =
                 $"{bookingCalendar.Url.TrimEnd('/')}/{uid}.ics";
@@ -625,9 +662,7 @@ END:VCALENDAR
                 HttpMethod.Delete,
                 eventUrl);
 
-            var credentials = Convert.ToBase64String(
-                System.Text.Encoding.UTF8.GetBytes(
-                    $"{_settings.Username}:{_settings.Password}"));
+            var credentials = await GetBasicAuthCredentialsAsync(clientId);
 
             httpRequest.Headers.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue(
@@ -651,6 +686,7 @@ END:VCALENDAR
         }
 
         public async Task<ICloudAvailabilityResponse> CheckAvailabilityAsync(
+            int clientId,
             DateTime start,
             DateTime end)
         {
@@ -661,7 +697,7 @@ END:VCALENDAR
             }
 
             // Get the events that occur during the requested period.
-            var events = await GetEventsAsync(start, end);
+            var events = await GetEventsAsync(clientId, start, end);
 
             // Check for overlapping events.
             var conflicts = events
@@ -680,7 +716,7 @@ END:VCALENDAR
         }
 
         public async Task<List<AvailableBookingSlot>>
-            GetAvailableSlotsAsync(BookingAvailabilityRequest request)
+            GetAvailableSlotsAsync(int clientId, BookingAvailabilityRequest request)
         {
             if (request.DurationMinutes <= 0)
             {
@@ -717,6 +753,7 @@ END:VCALENDAR
             // ---------------------------------------------------------
 
             var events = await GetEventsAsync(
+                clientId,
                 dayStart,
                 dayEnd);
 
