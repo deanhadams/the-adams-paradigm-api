@@ -31,7 +31,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Persist Data Protection keys to Postgres rather than local disk, which is wiped on
 // every Railway redeploy — losing the key ring would permanently break decryption of
 // anything already encrypted with it (e.g. Client.ICloudPassword).
+// Without an explicit ApplicationName, the discriminator used to derive keys from the
+// shared key ring defaults to the content-root path — which differs between a local
+// dev machine and the Railway container, so ciphertext encrypted in one environment
+// can't be decrypted in the other even though both read the same persisted key ring.
 builder.Services.AddDataProtection()
+    .SetApplicationName("TheAdamsParadigm.Api")
     .PersistKeysToDbContext<ApplicationDbContext>();
 
 builder.Services.AddSingleton<ClientCredentialProtector>();
