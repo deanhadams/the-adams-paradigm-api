@@ -43,7 +43,7 @@ public class ClaudeService
         // =========================================================
 
         var searchResult =
-            _knowledgeSearchService.Search(question);
+            await _knowledgeSearchService.SearchAsync(question);
 
         var discovery =
             _projectDiscoveryService.Analyze(

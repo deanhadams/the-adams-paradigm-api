@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Pgvector.EntityFrameworkCore;
 using TheAdamsParadigm.Api.Configuration;
 using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Services;
@@ -24,7 +25,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString, o => o.UseVector()));
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -47,8 +48,10 @@ builder.Services.AddCors(options =>
 // Register database seeding service
 builder.Services.AddScoped<DatabaseSeedService>();
 builder.Services.AddSingleton<KnowledgeBaseService>();
-builder.Services.AddSingleton<KnowledgeSearchService>();
+builder.Services.AddSingleton<KnowledgeChunkBuilder>();
+builder.Services.AddScoped<KnowledgeSearchService>();
 builder.Services.AddSingleton<ProjectDiscoveryService>();
+builder.Services.AddScoped<KnowledgeChunkSeedService>();
 
 builder.Services.Configure<ICloudSettings>(
     builder.Configuration.GetSection("ICloud"));
@@ -91,6 +94,17 @@ builder.Services.AddHttpClient<MemoryExtractionService>(client =>
 {
     client.BaseAddress = new Uri("https://api.anthropic.com/");
 });
+
+builder.Services.Configure<VoyageSettings>(
+    builder.Configuration.GetSection("Voyage"));
+
+builder.Services.AddHttpClient<VoyageEmbeddingService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.voyageai.com/");
+});
+
+builder.Services.Configure<KnowledgeSearchSettings>(
+    builder.Configuration.GetSection("KnowledgeSearch"));
 
 var app = builder.Build();
 

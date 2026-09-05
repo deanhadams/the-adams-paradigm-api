@@ -154,6 +154,47 @@ Host={hostname};Port={port};Database={database};Username={user};Password={passwo
 - Service IDs are auto-incrementing (SERIAL)
 - Order IDs are text/string based (not auto-generated)
 
+## Knowledge Base (RAG)
+
+The AI chatbot answers questions using retrieval over `knowledge_chunks`, a Postgres table
+of Voyage AI (`voyage-3.5`) embeddings — one row per business section, project, and FAQ
+defined in `Data/knowledge-base.json`. `KnowledgeSearchService` embeds the visitor's
+question and finds the closest chunks by cosine similarity (pgvector `<=>` operator).
+
+### Reseeding after `knowledge-base.json` changes
+
+Whenever the knowledge base content changes (new project, updated pricing, new FAQ, etc.),
+regenerate the embeddings by calling:
+
+```
+POST /api/knowledge/reseed
+```
+
+This is a full **clear-and-reseed**: it re-embeds every chunk from the current
+`knowledge-base.json`, and only deletes the old rows once every new embedding has
+succeeded — so a failed Voyage AI call (down, rate-limited) leaves the existing,
+still-working chunks untouched rather than wiping the table out. Response:
+
+```json
+{ "success": true, "chunksInserted": 27 }
+```
+
+There is no authentication on this endpoint (matching the rest of this project's admin
+actions, e.g. `register-webhook`) — it's meant to be triggered manually after a content
+change, not exposed to end users.
+
+### Tuning retrieval
+
+`KnowledgeSearchService`'s similarity cutoff is configurable, not hardcoded:
+
+```json
+"KnowledgeSearch": { "MinCosineSimilarity": 0.5 }
+```
+
+Raise it if irrelevant chunks are getting pulled in; lower it if relevant questions are
+falling back to "no info found" too often. No code change or redeploy needed to retune —
+just the config value (0.5-0.6 is a reasonable starting range).
+
 ## Next Steps
 
 1. Run the application - database will be automatically created and seeded

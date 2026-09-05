@@ -1,487 +1,107 @@
-﻿using System.Text;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Pgvector;
+using Pgvector.EntityFrameworkCore;
+using TheAdamsParadigm.Api.Configuration;
+using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Models;
 
 namespace TheAdamsParadigm.Api.Services;
 
 public class KnowledgeSearchService
 {
-    private readonly KnowledgeBaseService _knowledgeBaseService;
+    private const int MaxResults = 5;
+
+    private const string NoInfoFoundContext = """
+        No specific knowledge-base section matched
+        the visitor's question.
+
+        Do not invent information. If the question
+        cannot be answered accurately, explain that
+        the information is not currently available.
+        """;
+
+    private static KnowledgeSearchResult NoInfoFoundResult(string intent) => new()
+    {
+        Intent = intent,
+        Sections = [],
+        Context = NoInfoFoundContext,
+    };
+
+    private readonly ApplicationDbContext _dbContext;
+    private readonly VoyageEmbeddingService _embeddingService;
+    private readonly KnowledgeSearchSettings _settings;
+    private readonly ILogger<KnowledgeSearchService> _logger;
 
     public KnowledgeSearchService(
-        KnowledgeBaseService knowledgeBaseService)
+        ApplicationDbContext dbContext,
+        VoyageEmbeddingService embeddingService,
+        IOptions<KnowledgeSearchSettings> settings,
+        ILogger<KnowledgeSearchService> logger)
     {
-        _knowledgeBaseService = knowledgeBaseService;
+        _dbContext = dbContext;
+        _embeddingService = embeddingService;
+        _settings = settings.Value;
+        _logger = logger;
     }
 
-    public KnowledgeSearchResult Search(string query)
+    public async Task<KnowledgeSearchResult> SearchAsync(string query)
     {
-        var knowledgeBase =
-            _knowledgeBaseService.GetKnowledgeBase();
-
         var normalizedQuery = query.ToLowerInvariant();
 
-        var results = new List<(int Score, string SectionName, string Content)>();
-
-        // ---------------------------------------------------------
-        // Detect intent
-        // ---------------------------------------------------------
-
+        // Intent is a separate signal from retrieval (drives ProjectDiscoveryService
+        // and is surfaced directly in the system prompt) — unchanged from before.
         var intent = DetectIntent(normalizedQuery);
 
-        // ---------------------------------------------------------
-        // Business
-        // ---------------------------------------------------------
+        List<KnowledgeChunk>? topChunks;
 
-        var businessText = $"""
-            Business:
-            Name: {knowledgeBase.Business.Name}
-            Short Name: {knowledgeBase.Business.ShortName}
-            Founder: {knowledgeBase.Business.Founder}
-            Role: {knowledgeBase.Business.Role}
-            Tagline: {knowledgeBase.Business.Tagline}
-            Description: {knowledgeBase.Business.Description}
-            Email: {knowledgeBase.Business.Email}
-            Availability: {knowledgeBase.Business.Availability}
-            Location: {knowledgeBase.Business.Location}
-            Currency: {knowledgeBase.Business.Currency}
-            Website: {knowledgeBase.Business.Website}
-            Socials: {string.Join(", ", knowledgeBase.Business.Socials)}
-            """;
-
-        AddResult(
-            results,
-            normalizedQuery,
-            "Business",
-            businessText,
-            [
-                "business",
-                "company",
-                "founder",
-                "dean",
-                "who",
-                "website",
-                "email",
-                "contact",
-                "location",
-                "available"
-            ]);
-
-        // ---------------------------------------------------------
-        // About
-        // ---------------------------------------------------------
-
-        var aboutText = $"""
-            About:
-            {knowledgeBase.About.Summary}
-
-            Biography:
-            {string.Join("\n", knowledgeBase.About.Bio)}
-
-            Focus Areas:
-            {string.Join(", ", knowledgeBase.About.FocusAreas)}
-            """;
-
-        AddResult(
-            results,
-            normalizedQuery,
-            "About",
-            aboutText,
-            [
-                "about",
-                "dean",
-                "developer",
-                "experience",
-                "background",
-                "focus"
-            ]);
-
-        // ---------------------------------------------------------
-        // Philosophy
-        // ---------------------------------------------------------
-
-        var philosophyText = new StringBuilder();
-
-        philosophyText.AppendLine("Philosophy:");
-
-        foreach (var principle in knowledgeBase.Philosophy.Principles)
+        try
         {
-            philosophyText.AppendLine(
-                $"{principle.Title}: {principle.Description}");
+            topChunks = await FindNearestChunksAsync(query);
+        }
+        catch (Exception ex)
+        {
+            // The Voyage API being down, rate-limited, or erroring should degrade the
+            // chat to "no info found" rather than crash the request — the visitor
+            // still gets a response, just without knowledge-base grounding this turn.
+            _logger.LogError(ex, "Knowledge search failed; falling back to no-info-found");
+            return NoInfoFoundResult(intent);
         }
 
-        AddResult(
-            results,
-            normalizedQuery,
-            "Philosophy",
-            philosophyText.ToString(),
-            [
-                "philosophy",
-                "values",
-                "approach",
-                "principles",
-                "quality"
-            ]);
-
-        // ---------------------------------------------------------
-        // Process
-        // ---------------------------------------------------------
-
-        var processText = new StringBuilder();
-
-        processText.AppendLine("Development Process:");
-        processText.AppendLine(
-            knowledgeBase.Process.Summary);
-
-        foreach (var step in knowledgeBase.Process.Steps)
+        if (topChunks == null || topChunks.Count == 0)
         {
-            processText.AppendLine(
-                $"{step.Step}. {step.Title}: {step.Description}");
-        }
-
-        AddResult(
-            results,
-            normalizedQuery,
-            "Process",
-            processText.ToString(),
-            [
-                "process",
-                "development process",
-                "how",
-                "build",
-                "develop",
-                "steps",
-                "workflow",
-                "project process",
-                "how does it work"
-            ]);
-
-        // ---------------------------------------------------------
-        // Technologies
-        // ---------------------------------------------------------
-
-        var technologyText = new StringBuilder();
-
-        technologyText.AppendLine("Technologies:");
-        technologyText.AppendLine(
-            knowledgeBase.Technologies.Summary);
-
-        foreach (var group in knowledgeBase.Technologies.Groups)
-        {
-            technologyText.AppendLine(
-                $"{group.Category}: {group.Description}");
-
-            technologyText.AppendLine(
-                $"Technologies: {string.Join(", ", group.Items)}");
-        }
-
-        AddResult(
-            results,
-            normalizedQuery,
-            "Technologies",
-            technologyText.ToString(),
-            [
-                "technology",
-                "technologies",
-                "tech",
-                "react",
-                "typescript",
-                "javascript",
-                "html",
-                "css",
-                "tailwind",
-                "c#",
-                ".net",
-                "asp.net",
-                "api",
-                "database",
-                "postgres",
-                "postgresql",
-                "sql",
-                "signalr",
-                "ai",
-                "artificial intelligence",
-                "cloud",
-                "github",
-                "webhook"
-            ]);
-
-        // ---------------------------------------------------------
-        // Services
-        // ---------------------------------------------------------
-
-        var servicesText = new StringBuilder();
-
-        servicesText.AppendLine("Services:");
-        servicesText.AppendLine(
-            knowledgeBase.Services.Summary);
-
-        servicesText.AppendLine(
-            $"Currency: {knowledgeBase.Services.Currency}");
-
-        foreach (var service in knowledgeBase.Services.List)
-        {
-            servicesText.AppendLine(
-                $"""
-                Service ID: {service.ServiceId}
-                Title: {service.Title}
-                Description: {service.Description}
-                Cost Per Hour: {service.CostPerHour}
-                Setup Fee: {service.SetupFee}
-                Bookable: {service.IsBookable}
-                """);
-        }
-
-        AddResult(
-            results,
-            normalizedQuery,
-            "Services",
-            servicesText.ToString(),
-            [
-                "service",
-                "services",
-                "price",
-                "pricing",
-                "cost",
-                "rate",
-                "rates",
-                "hour",
-                "hourly",
-                "website",
-                "software",
-                "application",
-                "app",
-                "api",
-                "booking",
-                "consultation",
-                "consult",
-                "development",
-                "build",
-                "create",
-                "develop"
-            ]);
-
-        // ---------------------------------------------------------
-        // Booking
-        // ---------------------------------------------------------
-
-        var bookingText = $"""
-            Booking:
-            {knowledgeBase.Booking.Summary}
-
-            Payment Provider:
-            {knowledgeBase.Booking.PaymentProvider}
-
-            Currency:
-            {knowledgeBase.Booking.Currency}
-
-            Booking Steps:
-            {string.Join("\n", knowledgeBase.Booking.Steps)}
-
-            View Bookings:
-            {knowledgeBase.Booking.ViewBookings}
-            """;
-
-        AddResult(
-            results,
-            normalizedQuery,
-            "Booking",
-            bookingText,
-            [
-                "booking",
-                "book",
-                "appointment",
-                "payment",
-                "yoco",
-                "schedule",
-                "scheduling",
-                "availability",
-                "calendar",
-                "service"
-            ]);
-
-        // ---------------------------------------------------------
-        // Contact
-        // ---------------------------------------------------------
-
-        var contactText = new StringBuilder();
-
-        contactText.AppendLine("Contact:");
-        contactText.AppendLine(
-            knowledgeBase.Contact.Summary);
-
-        contactText.AppendLine(
-            $"Email: {knowledgeBase.Contact.Email}");
-
-        contactText.AppendLine("Conversion Paths:");
-
-        foreach (var path in knowledgeBase.Contact.ConversionPaths)
-        {
-            contactText.AppendLine(
-                $"{path.Title}: {path.Description}");
-        }
-
-        contactText.AppendLine("Project Types:");
-        contactText.AppendLine(
-            string.Join(
-                ", ",
-                knowledgeBase.Contact.ProjectTypeOptions));
-
-        contactText.AppendLine("Budget Options:");
-        contactText.AppendLine(
-            string.Join(
-                ", ",
-                knowledgeBase.Contact.BudgetOptions));
-
-        AddResult(
-            results,
-            normalizedQuery,
-            "Contact",
-            contactText.ToString(),
-            [
-                "contact",
-                "email",
-                "quote",
-                "project",
-                "budget",
-                "consultation",
-                "get started",
-                "reach",
-                "hire"
-            ]);
-
-        // ---------------------------------------------------------
-        // Projects
-        // ---------------------------------------------------------
-
-        foreach (var project in knowledgeBase.Projects)
-        {
-            var projectText = $"""
-                Project:
-                Name: {project.Name}
-                Category: {project.Category}
-                Description: {project.Description}
-
-                Highlights:
-                {string.Join("\n", project.Highlights)}
-
-                Tags:
-                {string.Join(", ", project.Tags)}
-
-                URL:
-                {project.Url}
-
-                Featured:
-                {project.Featured}
-
-                Challenge:
-                {project.Challenge}
-
-                Solution:
-                {project.Solution}
-
-                Features:
-                {string.Join("\n", project.Features)}
-                """;
-
-            var projectKeywords = new List<string>
-            {
-                "project",
-                "portfolio",
-                project.Name.ToLowerInvariant(),
-                project.Category.ToLowerInvariant()
-            };
-
-            projectKeywords.AddRange(
-                project.Tags.Select(x =>
-                    x.ToLowerInvariant()));
-
-            AddResult(
-                results,
-                normalizedQuery,
-                $"Project: {project.Name}",
-                projectText,
-                projectKeywords);
-        }
-
-        // ---------------------------------------------------------
-        // FAQs
-        // ---------------------------------------------------------
-
-        foreach (var faq in knowledgeBase.Faqs)
-        {
-            var faqText = $"""
-                Frequently Asked Question:
-
-                Question:
-                {faq.Question}
-
-                Answer:
-                {faq.Answer}
-                """;
-
-            AddResult(
-                results,
-                normalizedQuery,
-                $"FAQ: {faq.Question}",
-                faqText,
-                [
-                    "faq",
-                    "question",
-                    faq.Question.ToLowerInvariant()
-                ]);
-        }
-
-        // ---------------------------------------------------------
-        // Intent boosting
-        // ---------------------------------------------------------
-
-        BoostIntentResults(
-            results,
-            intent);
-
-        // ---------------------------------------------------------
-        // Select best results
-        // ---------------------------------------------------------
-
-        var bestResults = results
-            .OrderByDescending(x => x.Score)
-            .Take(5)
-            .Where(x => x.Score > 0)
-            .ToList();
-
-        // ---------------------------------------------------------
-        // Fallback
-        // ---------------------------------------------------------
-
-        if (bestResults.Count == 0)
-        {
-            return new KnowledgeSearchResult
-            {
-                Intent = intent,
-                Sections = [],
-                Context = """
-                    No specific knowledge-base section matched
-                    the visitor's question.
-
-                    Do not invent information. If the question
-                    cannot be answered accurately, explain that
-                    the information is not currently available.
-                    """
-            };
+            return NoInfoFoundResult(intent);
         }
 
         return new KnowledgeSearchResult
         {
             Intent = intent,
-
-            Sections = bestResults
-                .Select(x => x.SectionName)
-                .ToList(),
-
+            Sections = topChunks.Select(x => x.Section).ToList(),
             Context = string.Join(
                 "\n\n----------------------------\n\n",
-                bestResults.Select(x => x.Content))
+                topChunks.Select(x => x.Content))
         };
+    }
+
+    private async Task<List<KnowledgeChunk>?> FindNearestChunksAsync(string query)
+    {
+        var queryEmbedding = await _embeddingService.EmbedQueryAsync(query);
+        var queryVector = new Vector(queryEmbedding);
+
+        var candidates = await _dbContext.KnowledgeChunks
+            .OrderBy(c => c.Embedding.CosineDistance(queryVector))
+            .Take(MaxResults)
+            .Select(c => new
+            {
+                Chunk = c,
+                Distance = c.Embedding.CosineDistance(queryVector)
+            })
+            .ToListAsync();
+
+        return candidates
+            .Where(c => (1 - c.Distance) >= _settings.MinCosineSimilarity)
+            .Select(c => c.Chunk)
+            .ToList();
     }
 
     // =============================================================
@@ -612,99 +232,6 @@ public class KnowledgeSearchService
         }
 
         return "General";
-    }
-
-    // =============================================================
-    // Boost results based on detected intent
-    // =============================================================
-
-    private static void BoostIntentResults(
-        List<(int Score, string SectionName, string Content)> results,
-        string intent)
-    {
-        var boostSections = intent switch
-        {
-            "Pricing" =>
-                new[] { "Services", "Contact" },
-
-            "Booking" =>
-                new[] { "Booking", "Services", "Contact" },
-
-            "Contact" =>
-                new[] { "Contact", "Business" },
-
-            "Projects" =>
-                new[] { "Project" },
-
-            "Technologies" =>
-                new[] { "Technologies" },
-
-            "Process" =>
-                new[] { "Process" },
-
-            "About" =>
-                new[] { "About", "Business", "Philosophy" },
-
-            "Services" =>
-                new[] { "Services", "Technologies" },
-
-            _ =>
-                Array.Empty<string>()
-        };
-
-        for (var i = 0; i < results.Count; i++)
-        {
-            var result = results[i];
-
-            if (boostSections.Any(section =>
-                    result.SectionName.StartsWith(
-                        section,
-                        StringComparison.OrdinalIgnoreCase)))
-            {
-                results[i] = (
-                    result.Score + 5,
-                    result.SectionName,
-                    result.Content);
-            }
-        }
-    }
-
-    // =============================================================
-    // Add search result
-    // =============================================================
-
-    private static void AddResult(
-        List<(int Score, string SectionName, string Content)> results,
-        string query,
-        string sectionName,
-        string content,
-        IEnumerable<string> keywords)
-    {
-        var score = 0;
-
-        foreach (var keyword in keywords)
-        {
-            if (string.IsNullOrWhiteSpace(keyword))
-            {
-                continue;
-            }
-
-            if (query.Contains(
-                    keyword.ToLowerInvariant()))
-            {
-                score++;
-            }
-        }
-
-        if (score > 0)
-        {
-            results.Add(
-                (
-                    score,
-                    sectionName,
-                    content
-                ));
-        }
     }
 
     // =============================================================

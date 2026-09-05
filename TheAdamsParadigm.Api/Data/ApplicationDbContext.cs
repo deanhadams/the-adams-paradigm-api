@@ -13,6 +13,7 @@ namespace TheAdamsParadigm.Api.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<Service> Services { get; set; }
         public DbSet<UserMemory> UserMemories { get; set; }
+        public DbSet<KnowledgeChunk> KnowledgeChunks { get; set; }
 
         // Npgsql rejects Kind=Utc DateTimes against "timestamp without time zone" columns;
         // strip the Kind on write and re-tag reads as UTC since that's what we always store.
@@ -28,10 +29,13 @@ namespace TheAdamsParadigm.Api.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.HasPostgresExtension("vector");
+
             // Map entities to specific table names used in SQL script
             modelBuilder.Entity<Order>().ToTable("orders");
             modelBuilder.Entity<Service>().ToTable("services");
             modelBuilder.Entity<UserMemory>().ToTable("user_memories");
+            modelBuilder.Entity<KnowledgeChunk>().ToTable("knowledge_chunks");
 
             // Configure Order entity
             modelBuilder.Entity<Order>(entity =>
@@ -90,6 +94,18 @@ namespace TheAdamsParadigm.Api.Data
                     .HasConversion(UtcDateTimeConverter);
 
                 entity.HasIndex(e => e.ChatUserId).HasDatabaseName("idx_user_memories_chat_user_id");
+            });
+
+            // Configure KnowledgeChunk entity
+            modelBuilder.Entity<KnowledgeChunk>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id").UseIdentityColumn();
+                entity.Property(e => e.Section).HasColumnName("section").IsRequired();
+                entity.Property(e => e.Content).HasColumnName("content").IsRequired();
+                entity.Property(e => e.Embedding).HasColumnName("embedding").HasColumnType("vector(1024)");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp without time zone")
+                    .HasConversion(UtcDateTimeConverter);
             });
         }
     }
