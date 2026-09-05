@@ -76,7 +76,7 @@ This guide covers the setup and configuration of the PostgreSQL database connect
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=ep-tiny-silence-za0c6dcp-pooler.c-2.eu-west-2.aws.neon.tech;Port=5432;Database=adamsParadigm_db;Username=tap_owner;Password=npg_l5amuCfSoQ4P;SSL Mode=Require;Include Error Detail=True;Channel Binding=Require;"
+    "DefaultConnection": "Host=ep-tiny-silence-za0c6dcp-pooler.c-2.eu-west-2.aws.neon.tech;Port=5432;Database=adamsParadigm_db;Username=tap_owner;Password=xxx;SSL Mode=Require;Include Error Detail=True;Channel Binding=Require;"
   }
 }
 ```
