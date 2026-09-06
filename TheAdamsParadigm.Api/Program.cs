@@ -53,7 +53,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:5173",
-                "https://glorious-enchantment-production-22d8.up.railway.app")
+                "https://glorious-enchantment-production-22d8.up.railway.app",
+                "https://theadamsparadigm.com")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
