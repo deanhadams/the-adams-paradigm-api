@@ -35,6 +35,11 @@
         // UID of the iCloud calendar event created once payment succeeds.
         public string? CalendarEventUid { get; set; }
 
+        // Which client's iCloud calendar this booking was made against — captured from
+        // the frontend-supplied key at checkout time, since the async Yoco webhook that
+        // later creates the calendar event has no request from the browser to read it from.
+        public string? ClientApiKey { get; set; }
+
         // Navigation property
         public Service? Service { get; set; }
     }

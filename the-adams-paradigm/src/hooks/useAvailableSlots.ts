@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { CLIENT_API_KEY } from '../lib/clientApiKey'
 import { API_BASE_URL } from '../lib/config'
 
 export interface AvailableSlot {
@@ -46,6 +47,7 @@ export function useAvailableSlots(date: Date | null, durationMinutes: number): U
     const params = new URLSearchParams({
       date: dateParam,
       durationMinutes: String(durationMinutes),
+      clientApiKey: CLIENT_API_KEY,
     })
 
     fetch(`${API_BASE_URL}/api/bookings/available-slots?${params.toString()}`)

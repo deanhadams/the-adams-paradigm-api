@@ -32,6 +32,13 @@ CREATE TABLE IF NOT EXISTS orders (
     email TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     paid_at TIMESTAMP WITHOUT TIME ZONE,
+    booking_start TIMESTAMP WITHOUT TIME ZONE,
+    booking_end TIMESTAMP WITHOUT TIME ZONE,
+    calendar_event_uid TEXT,
+    -- Which client's iCloud calendar this booking was made against — captured from the
+    -- frontend-supplied key (VITE_CLIENT_API_KEY) at checkout time, since the async Yoco
+    -- webhook that later creates the calendar event has no browser request to read it from.
+    client_api_key TEXT,
     CONSTRAINT fk_orders_service_id FOREIGN KEY (service_id) REFERENCES services(service_id)
 );
 

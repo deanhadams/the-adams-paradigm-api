@@ -69,6 +69,7 @@ namespace TheAdamsParadigm.Api.Data
                 entity.Property(e => e.BookingEnd).HasColumnName("booking_end").HasColumnType("timestamp without time zone")
                     .HasConversion(UtcNullableDateTimeConverter);
                 entity.Property(e => e.CalendarEventUid).HasColumnName("calendar_event_uid");
+                entity.Property(e => e.ClientApiKey).HasColumnName("client_api_key");
 
                 entity.HasOne(e => e.Service)
                     .WithMany(s => s.Orders)

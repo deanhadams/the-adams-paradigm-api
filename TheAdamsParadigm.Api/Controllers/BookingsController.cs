@@ -6,10 +6,9 @@ using TheAdamsParadigm.Api.Services.CloudCalendarService;
 
 namespace TheAdamsParadigm.Api.Controllers;
 
-// Public-facing booking endpoints for this site's own calendar. Unlike ICloudController,
-// these don't take a clientApiKey from the caller — the site only ever books against its
-// own calendar, so the key stays server-side (BookingSettings) instead of round-tripping
-// through the browser.
+// Public-facing booking endpoints. The caller (the frontend, via VITE_CLIENT_API_KEY)
+// supplies which client's calendar to check — the API doesn't hold its own copy of that
+// key, only the non-secret scheduling defaults (DefaultDurationMinutes/SlotIntervalMinutes).
 [ApiController]
 [Route("api/bookings")]
 public class BookingsController : ControllerBase
@@ -28,8 +27,14 @@ public class BookingsController : ControllerBase
     [HttpGet("available-slots")]
     public async Task<IActionResult> GetAvailableSlots(
         [FromQuery] DateTime date,
+        [FromQuery] string clientApiKey,
         [FromQuery] int? durationMinutes = null)
     {
+        if (string.IsNullOrWhiteSpace(clientApiKey))
+        {
+            return BadRequest(new { error = "Client API key is required." });
+        }
+
         var request = new BookingAvailabilityRequest
         {
             Date = date,
@@ -44,7 +49,7 @@ public class BookingsController : ControllerBase
         try
         {
             var slots = await _iCloudCalendarService
-                .GetAvailableSlotsAsync(_bookingSettings.ClientApiKey, request);
+                .GetAvailableSlotsAsync(clientApiKey, request);
 
             // Don't offer slots that have already passed today, in the booking
             // calendar's own timezone (not the server's).

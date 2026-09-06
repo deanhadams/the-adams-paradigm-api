@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { CLIENT_API_KEY } from '../lib/clientApiKey'
 import { API_BASE_URL } from '../lib/config'
 
 export interface CreateCheckoutRequest {
@@ -45,7 +46,7 @@ export function useCreateCheckout(): UseCreateCheckoutResult {
       const response = await fetch(`${API_BASE_URL}/api/payments/create-checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(request),
+        body: JSON.stringify({ ...request, clientApiKey: CLIENT_API_KEY }),
       })
       if (!response.ok) {
         const body = await response.json().catch(() => null) as { error?: string } | null

@@ -1,8 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using TheAdamsParadigm.Api.Configuration;
 using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Models;
 using TheAdamsParadigm.Api.Services;
@@ -18,7 +16,6 @@ public class PaymentsController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly ResendService _resendService;
     private readonly ICloudCalendarService _iCloudCalendarService;
-    private readonly BookingSettings _bookingSettings;
     private readonly ILogger<PaymentsController> _logger;
 
     public PaymentsController(
@@ -26,14 +23,12 @@ public class PaymentsController : ControllerBase
         ApplicationDbContext context,
         ResendService resendService,
         ICloudCalendarService iCloudCalendarService,
-        IOptions<BookingSettings> bookingSettings,
         ILogger<PaymentsController> logger)
     {
         _yocoService = yocoService;
         _context = context;
         _resendService = resendService;
         _iCloudCalendarService = iCloudCalendarService;
-        _bookingSettings = bookingSettings.Value;
         _logger = logger;
     }
 
@@ -52,6 +47,11 @@ public class PaymentsController : ControllerBase
                 return BadRequest(new { error = "Duration must be greater than zero." });
             }
 
+            if (string.IsNullOrWhiteSpace(request.ClientApiKey))
+            {
+                return BadRequest(new { error = "Client API key is required." });
+            }
+
             var nowInBookingTimeZone = TimeZoneInfo.ConvertTimeFromUtc(
                 DateTime.UtcNow,
                 ICloudCalendarService.BookingTimeZone);
@@ -64,7 +64,7 @@ public class PaymentsController : ControllerBase
             var bookingEnd = request.BookingStart.AddMinutes(request.DurationMinutes);
 
             var availability = await _iCloudCalendarService.CheckAvailabilityAsync(
-                _bookingSettings.ClientApiKey,
+                request.ClientApiKey,
                 request.BookingStart,
                 bookingEnd);
 
@@ -86,6 +86,7 @@ public class PaymentsController : ControllerBase
                 Surname = request.Surname,
                 Email = request.Email,
                 CreatedAt = DateTime.UtcNow,
+                ClientApiKey = request.ClientApiKey,
                 BookingStart = request.BookingStart,
                 BookingEnd = bookingEnd
             };

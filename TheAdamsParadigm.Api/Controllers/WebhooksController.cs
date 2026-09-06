@@ -1,10 +1,8 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using StandardWebhooks;
 using StandardWebhooks.Diagnostics;
-using TheAdamsParadigm.Api.Configuration;
 using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Models;
 using TheAdamsParadigm.Api.Models.Calendar;
@@ -22,7 +20,6 @@ public class WebhooksController : ControllerBase
     private readonly ProcessedWebhookStore _processedWebhookStore;
     private readonly ResendService _resendService;
     private readonly ICloudCalendarService _iCloudCalendarService;
-    private readonly BookingSettings _bookingSettings;
     private readonly ILogger<WebhooksController> _logger;
 
     public WebhooksController(
@@ -31,7 +28,6 @@ public class WebhooksController : ControllerBase
         ProcessedWebhookStore processedWebhookStore,
         ResendService resendService,
         ICloudCalendarService iCloudCalendarService,
-        IOptions<BookingSettings> bookingSettings,
         ILogger<WebhooksController> logger)
     {
         _configuration = configuration;
@@ -39,7 +35,6 @@ public class WebhooksController : ControllerBase
         _processedWebhookStore = processedWebhookStore;
         _resendService = resendService;
         _iCloudCalendarService = iCloudCalendarService;
-        _bookingSettings = bookingSettings.Value;
         _logger = logger;
     }
 
@@ -143,32 +138,41 @@ public class WebhooksController : ControllerBase
 
                     if (order.BookingStart.HasValue && order.BookingEnd.HasValue)
                     {
-                        try
+                        if (string.IsNullOrWhiteSpace(order.ClientApiKey))
                         {
-                            var serviceTitle = order.ServiceId.HasValue
-                                ? await _context.Services.AsNoTracking()
-                                    .Where(s => s.ServiceId == order.ServiceId.Value)
-                                    .Select(s => s.Title)
-                                    .FirstOrDefaultAsync()
-                                : null;
-
-                            var uid = await _iCloudCalendarService.CreateEventAsync(
-                                _bookingSettings.ClientApiKey,
-                                new CreateICloudCalendarEventRequest
-                                {
-                                    Summary = $"{serviceTitle ?? "Booking"} — {order.Name} {order.Surname}",
-                                    Description = $"Order: {order.OrderId}\nEmail: {order.Email}",
-                                    Location = "The Adams Paradigm",
-                                    Start = order.BookingStart.Value,
-                                    End = order.BookingEnd.Value
-                                });
-
-                            order.CalendarEventUid = uid;
-                            await _context.SaveChangesAsync();
+                            _logger.LogError(
+                                "Order {OrderId} has a booking but no ClientApiKey was captured at checkout — skipping calendar event creation.",
+                                order.OrderId);
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            _logger.LogError(ex, "Failed to create calendar event for order {OrderId}", order.OrderId);
+                            try
+                            {
+                                var serviceTitle = order.ServiceId.HasValue
+                                    ? await _context.Services.AsNoTracking()
+                                        .Where(s => s.ServiceId == order.ServiceId.Value)
+                                        .Select(s => s.Title)
+                                        .FirstOrDefaultAsync()
+                                    : null;
+
+                                var uid = await _iCloudCalendarService.CreateEventAsync(
+                                    order.ClientApiKey,
+                                    new CreateICloudCalendarEventRequest
+                                    {
+                                        Summary = $"{serviceTitle ?? "Booking"} — {order.Name} {order.Surname}",
+                                        Description = $"Order: {order.OrderId}\nEmail: {order.Email}",
+                                        Location = "The Adams Paradigm",
+                                        Start = order.BookingStart.Value,
+                                        End = order.BookingEnd.Value
+                                    });
+
+                                order.CalendarEventUid = uid;
+                                await _context.SaveChangesAsync();
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Failed to create calendar event for order {OrderId}", order.OrderId);
+                            }
                         }
                     }
 
