@@ -56,10 +56,11 @@ export const projects: Project[] = [
     name: 'World Quiz League',
     category: 'Quiz Platform • Real-Time Experience',
     description:
-      'An interactive quiz platform concept designed around categories, difficulty, scoring, competition and leaderboards.',
+      'An interactive quiz competition platform — "Where Knowledge Competes" — built around categories, difficulty, scoring, competition and leaderboards.',
     highlights: ['Real-time interaction', 'Game mechanics', 'Scoring', 'Leaderboards', 'Question systems'],
     tags: ['SignalR', 'Real-Time', 'Leaderboards'],
     accent: 'blue',
+    url: 'https://world-quiz-league-598313888394.europe-west2.run.app/',
   },
   {
     slug: 'isyncal',

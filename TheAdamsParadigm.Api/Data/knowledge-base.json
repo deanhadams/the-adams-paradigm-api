@@ -324,9 +324,10 @@
     {
       "name": "World Quiz League",
       "category": "Quiz Platform � Real-Time Experience",
-      "description": "An interactive quiz platform concept designed around categories, difficulty, scoring, competition and leaderboards.",
+      "description": "An interactive quiz competition platform � \"Where Knowledge Competes\" � built around categories, difficulty, scoring, competition and leaderboards.",
       "highlights": [ "Real-time interaction", "Game mechanics", "Scoring", "Leaderboards", "Question systems" ],
       "tags": [ "SignalR", "Real-Time", "Leaderboards" ],
+      "url": "https://world-quiz-league-598313888394.europe-west2.run.app/",
       "featured": false
     },
     {
@@ -395,7 +396,7 @@
     },
     {
       "question": "Can I see examples of past work?",
-      "answer": "Yes � the Projects section showcases work including Complete The Eleven FC (an interactive football lineup game), Devil Bunny (an anime universe digital experience), World Quiz League (a real-time quiz platform concept), and iSyncal (a production REST API that simplifies iCloud Calendar integration for developers)."
+      "answer": "Yes � the Projects section showcases work including Complete The Eleven FC (an interactive football lineup game), Devil Bunny (an anime universe digital experience), World Quiz League (a live real-time quiz competition platform), and iSyncal (a production REST API that simplifies iCloud Calendar integration for developers)."
     },
     {
       "question": "Are you currently taking on new projects?",
