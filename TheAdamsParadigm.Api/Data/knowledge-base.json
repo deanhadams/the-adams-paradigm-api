@@ -1,6 +1,6 @@
 {
-  "$schema": "Knowledge base for The Adams Paradigm website — used as source data for FAQs and an AI chatbot. Keep this file up to date as the business changes.",
-  "lastUpdated": "2026-09-03",
+  "$schema": "Knowledge base for The Adams Paradigm website ï¿½ used as source data for FAQs and an AI chatbot. Keep this file up to date as the business changes.",
+  "lastUpdated": "2026-09-08",
 
   "business": {
     "name": "The Adams Paradigm",
@@ -18,10 +18,10 @@
   },
 
   "about": {
-    "summary": "Dean Adams is a developer who enjoys taking ideas from rough concepts and turning them into functioning digital products. He works across the full process — planning, interface design, backend development, and shipping to real users.",
+    "summary": "Dean Adams is a developer who enjoys taking ideas from rough concepts and turning them into functioning digital products. He works across the full process ï¿½ planning, interface design, backend development, and shipping to real users.",
     "bio": [
-      "I'm a developer who enjoys taking ideas from rough concepts and turning them into functioning digital products. I like the full range of the process — planning how something should work, building the interface, wiring up the backend, and getting it in front of real users.",
-      "My focus is on building practical solutions: applications that connect a well-designed frontend to a solid backend, integrate cleanly with the APIs and services they depend on, and hold up in production — not just in a demo.",
+      "I'm a developer who enjoys taking ideas from rough concepts and turning them into functioning digital products. I like the full range of the process ï¿½ planning how something should work, building the interface, wiring up the backend, and getting it in front of real users.",
+      "My focus is on building practical solutions: applications that connect a well-designed frontend to a solid backend, integrate cleanly with the APIs and services they depend on, and hold up in production ï¿½ not just in a demo.",
       "I'm always learning new technologies as they become useful, and I care about the details that make an application feel good to use, not just function correctly."
     ],
     "focusAreas": [
@@ -105,7 +105,7 @@
   },
 
   "technologies": {
-    "summary": "Practical, modern technologies chosen based on what a project actually needs — not novelty for its own sake.",
+    "summary": "Practical, modern technologies chosen based on what a project actually needs ï¿½ not novelty for its own sake.",
     "groups": [
       {
         "category": "Frontend",
@@ -227,7 +227,7 @@
       {
         "serviceId": 11,
         "title": "Basic Website",
-        "description": "A polished three-page website built to make a strong first impression — clean, focused design with no added integrations.",
+        "description": "A polished three-page website built to make a strong first impression ï¿½ clean, focused design with no added integrations.",
         "costPerHour": 100.00,
         "setupFee": 2500.00,
         "isBookable": true
@@ -288,8 +288,8 @@
     "budgetOptions": [
       "Not sure yet",
       "Under R5,000",
-      "R5,000 – R15,000",
-      "R15,000 – R50,000",
+      "R5,000 ï¿½ R15,000",
+      "R15,000 ï¿½ R50,000",
       "R50,000+"
     ]
   },
@@ -297,13 +297,13 @@
   "projects": [
     {
       "name": "Complete The Eleven FC",
-      "category": "Football • Interactive Game • Web Application",
+      "category": "Football ï¿½ Interactive Game ï¿½ Web Application",
       "description": "An interactive football game built around legendary starting lineups where players must identify the missing star.",
       "highlights": [ "Game logic", "Interactive UI", "Football data", "Responsive design", "User engagement" ],
       "tags": [ "React", "TypeScript", "Game Logic", "Responsive UI" ],
       "url": "https://lineup-legends.vercel.app/",
       "featured": true,
-      "challenge": "Turn static football trivia into a genuinely replayable game — one that tests recall against real starting lineups without feeling like a quiz form.",
+      "challenge": "Turn static football trivia into a genuinely replayable game ï¿½ one that tests recall against real starting lineups without feeling like a quiz form.",
       "solution": "A lineup-based guessing engine that presents legendary starting elevens with one player missing, backed by a responsive board UI that works as well on a phone as it does on a desktop.",
       "features": [
         "Lineup and squad data modeling",
@@ -314,7 +314,7 @@
     },
     {
       "name": "Devil Bunny",
-      "category": "Anime • Digital Universe • Creative Platform",
+      "category": "Anime ï¿½ Digital Universe ï¿½ Creative Platform",
       "description": "A large-scale original anime/manga universe developed into a digital experience.",
       "highlights": [ "World building", "Character systems", "Storytelling", "Digital presentation", "Creative technology" ],
       "tags": [ "World Building", "Content Systems", "Digital Presentation" ],
@@ -323,18 +323,19 @@
     },
     {
       "name": "World Quiz League",
-      "category": "Quiz Platform • Real-Time Experience",
+      "category": "Quiz Platform ï¿½ Real-Time Experience",
       "description": "An interactive quiz platform concept designed around categories, difficulty, scoring, competition and leaderboards.",
       "highlights": [ "Real-time interaction", "Game mechanics", "Scoring", "Leaderboards", "Question systems" ],
       "tags": [ "SignalR", "Real-Time", "Leaderboards" ],
       "featured": false
     },
     {
-      "name": "FlowDesk",
-      "category": "Professional Product Concept",
-      "description": "A modern business operations platform bringing bookings, customer management, payments and workflow automation into one place.",
-      "highlights": [ "Authentication", "Dashboard", "Booking", "Payments", "Database", "API architecture", "Notifications" ],
-      "tags": [ "ASP.NET Core", "React", "SQL Server", "Payments API" ],
+      "name": "iSyncal",
+      "category": "Developer Tool ï¿½ REST API ï¿½ SaaS Product",
+      "description": "A REST API service that lets developers read and write iCloud Calendar events without touching the CalDAV protocol directly.",
+      "highlights": [ "REST API", "CalDAV Integration", "Apple App-Password Auth", "Recurring Events (RRULE)", "Calendar Sync" ],
+      "tags": [ "REST API", "CalDAV", "iCloud Calendar", "Developer Tool" ],
+      "url": "https://icloud-calendar-dashboard-production.up.railway.app/",
       "featured": false
     }
   ],
@@ -342,7 +343,7 @@
   "faqs": [
     {
       "question": "What does The Adams Paradigm do?",
-      "answer": "The Adams Paradigm, run by Dean Adams, builds modern websites, web applications, APIs and digital products for small businesses, startups and individuals — from initial idea through to a live, working product."
+      "answer": "The Adams Paradigm, run by Dean Adams, builds modern websites, web applications, APIs and digital products for small businesses, startups and individuals ï¿½ from initial idea through to a live, working product."
     },
     {
       "question": "Who is behind The Adams Paradigm?",
@@ -354,7 +355,7 @@
     },
     {
       "question": "How much do your services cost?",
-      "answer": "Pricing is hourly plus a one-time setup fee, in ZAR. Hourly rates range from R95–R160 depending on the service, with most setup fees at R500 (the Basic Website package has a R2,500 setup fee). Exact quotes depend on project scope."
+      "answer": "Pricing is hourly plus a one-time setup fee, in ZAR. Hourly rates range from R95ï¿½R160 depending on the service, with most setup fees at R500 (the Basic Website package has a R2,500 setup fee). Exact quotes depend on project scope."
     },
     {
       "question": "How do I book a service?",
@@ -366,7 +367,7 @@
     },
     {
       "question": "Do you work with individuals or only businesses?",
-      "answer": "Both — and startups too. Projects range from small business tools and startup MVPs to personal passion projects."
+      "answer": "Both ï¿½ and startups too. Projects range from small business tools and startup MVPs to personal passion projects."
     },
     {
       "question": "What technologies do you use?",
@@ -374,11 +375,11 @@
     },
     {
       "question": "What is your development process?",
-      "answer": "Six steps: Discover, Plan, Build, Test, Launch, and Evolve — from understanding the problem through to a live product that keeps improving."
+      "answer": "Six steps: Discover, Plan, Build, Test, Launch, and Evolve ï¿½ from understanding the problem through to a live product that keeps improving."
     },
     {
       "question": "Can you build an MVP for my startup?",
-      "answer": "Yes — MVPs and scalable product foundations for startups are a core part of the work."
+      "answer": "Yes ï¿½ MVPs and scalable product foundations for startups are a core part of the work."
     },
     {
       "question": "Do you build AI-powered features?",
@@ -394,7 +395,7 @@
     },
     {
       "question": "Can I see examples of past work?",
-      "answer": "Yes — the Projects section showcases work including Complete The Eleven FC (an interactive football lineup game), Devil Bunny (an anime universe digital experience), World Quiz League (a real-time quiz platform concept), and FlowDesk (a business operations platform concept)."
+      "answer": "Yes ï¿½ the Projects section showcases work including Complete The Eleven FC (an interactive football lineup game), Devil Bunny (an anime universe digital experience), World Quiz League (a real-time quiz platform concept), and iSyncal (a production REST API that simplifies iCloud Calendar integration for developers)."
     },
     {
       "question": "Are you currently taking on new projects?",

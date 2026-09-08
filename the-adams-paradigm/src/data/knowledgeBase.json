@@ -1,6 +1,6 @@
 {
   "$schema": "Knowledge base for The Adams Paradigm website — used as source data for FAQs and an AI chatbot. Keep this file up to date as the business changes.",
-  "lastUpdated": "2026-09-03",
+  "lastUpdated": "2026-09-08",
 
   "business": {
     "name": "The Adams Paradigm",
@@ -276,11 +276,12 @@
       "featured": false
     },
     {
-      "name": "FlowDesk",
-      "category": "Professional Product Concept",
-      "description": "A modern business operations platform bringing bookings, customer management, payments and workflow automation into one place.",
-      "highlights": ["Authentication", "Dashboard", "Booking", "Payments", "Database", "API architecture", "Notifications"],
-      "tags": ["ASP.NET Core", "React", "SQL Server", "Payments API"],
+      "name": "iSyncal",
+      "category": "Developer Tool • REST API • SaaS Product",
+      "description": "A REST API service that lets developers read and write iCloud Calendar events without touching the CalDAV protocol directly.",
+      "highlights": ["REST API", "CalDAV Integration", "Apple App-Password Auth", "Recurring Events (RRULE)", "Calendar Sync"],
+      "tags": ["REST API", "CalDAV", "iCloud Calendar", "Developer Tool"],
+      "url": "https://icloud-calendar-dashboard-production.up.railway.app/",
       "featured": false
     }
   ],
@@ -340,7 +341,7 @@
     },
     {
       "question": "Can I see examples of past work?",
-      "answer": "Yes — the Projects section showcases work including Complete The Eleven FC (an interactive football lineup game), Devil Bunny (an anime universe digital experience), World Quiz League (a real-time quiz platform concept), and FlowDesk (a business operations platform concept)."
+      "answer": "Yes — the Projects section showcases work including Complete The Eleven FC (an interactive football lineup game), Devil Bunny (an anime universe digital experience), World Quiz League (a real-time quiz platform concept), and iSyncal (a production REST API that simplifies iCloud Calendar integration for developers)."
     },
     {
       "question": "Are you currently taking on new projects?",

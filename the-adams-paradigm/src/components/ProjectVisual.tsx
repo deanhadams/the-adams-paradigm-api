@@ -98,7 +98,7 @@ const patterns: Record<string, typeof PitchPattern> = {
   'complete-the-eleven-fc': PitchPattern,
   'devil-bunny': ConstellationPattern,
   'world-quiz-league': GridPulsePattern,
-  flowdesk: LayeredPanelsPattern,
+  isyncal: LayeredPanelsPattern,
 }
 
 export function ProjectVisual({ slug, accent, className, children, image, imageAlt }: ProjectVisualProps) {

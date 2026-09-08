@@ -62,14 +62,15 @@ export const projects: Project[] = [
     accent: 'blue',
   },
   {
-    slug: 'flowdesk',
-    name: 'FlowDesk',
-    category: 'Professional Product Concept',
+    slug: 'isyncal',
+    name: 'iSyncal',
+    category: 'Developer Tool • REST API • SaaS Product',
     description:
-      'A modern business operations platform bringing bookings, customer management, payments and workflow automation into one place.',
-    highlights: ['Authentication', 'Dashboard', 'Booking', 'Payments', 'Database', 'API architecture', 'Notifications'],
-    tags: ['ASP.NET Core', 'React', 'SQL Server', 'Payments API'],
+      'A REST API service that lets developers read and write iCloud Calendar events without touching the CalDAV protocol directly.',
+    highlights: ['REST API', 'CalDAV Integration', 'Apple App-Password Auth', 'Recurring Events (RRULE)', 'Calendar Sync'],
+    tags: ['REST API', 'CalDAV', 'iCloud Calendar', 'Developer Tool'],
     accent: 'emerald',
+    url: 'https://icloud-calendar-dashboard-production.up.railway.app/',
   },
 ]
 
