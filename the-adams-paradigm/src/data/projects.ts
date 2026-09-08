@@ -61,6 +61,7 @@ export const projects: Project[] = [
     tags: ['SignalR', 'Real-Time', 'Leaderboards'],
     accent: 'blue',
     url: 'https://world-quiz-league-598313888394.europe-west2.run.app/',
+    image: '/projects/WorldQuizLeague.png',
   },
   {
     slug: 'isyncal',
@@ -72,6 +73,7 @@ export const projects: Project[] = [
     tags: ['REST API', 'CalDAV', 'iCloud Calendar', 'Developer Tool'],
     accent: 'emerald',
     url: 'https://icloud-calendar-dashboard-production.up.railway.app/',
+    image: '/projects/iSynCal.png',
   },
 ]
 
