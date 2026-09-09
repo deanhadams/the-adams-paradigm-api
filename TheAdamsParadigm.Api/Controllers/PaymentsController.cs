@@ -42,35 +42,43 @@ public class PaymentsController : ControllerBase
                 return BadRequest(new { error = "Amount must be greater than zero." });
             }
 
-            if (request.DurationMinutes <= 0)
-            {
-                return BadRequest(new { error = "Duration must be greater than zero." });
-            }
-
             if (string.IsNullOrWhiteSpace(request.ClientApiKey))
             {
                 return BadRequest(new { error = "Client API key is required." });
             }
 
-            var nowInBookingTimeZone = TimeZoneInfo.ConvertTimeFromUtc(
-                DateTime.UtcNow,
-                ICloudCalendarService.BookingTimeZone);
+            // Calendar booking is optional — the UI currently doesn't collect a slot
+            // (see BookingForm.tsx's CALENDAR_BOOKING_ENABLED flag), so BookingStart is
+            // routinely absent. Only validate/reserve a slot when one was actually sent.
+            DateTime? bookingEnd = null;
 
-            if (request.BookingStart <= nowInBookingTimeZone)
+            if (request.BookingStart.HasValue)
             {
-                return BadRequest(new { error = "Please select a booking time in the future." });
-            }
+                if (request.DurationMinutes <= 0)
+                {
+                    return BadRequest(new { error = "Duration must be greater than zero." });
+                }
 
-            var bookingEnd = request.BookingStart.AddMinutes(request.DurationMinutes);
+                var nowInBookingTimeZone = TimeZoneInfo.ConvertTimeFromUtc(
+                    DateTime.UtcNow,
+                    ICloudCalendarService.BookingTimeZone);
 
-            var availability = await _iCloudCalendarService.CheckAvailabilityAsync(
-                request.ClientApiKey,
-                request.BookingStart,
-                bookingEnd);
+                if (request.BookingStart <= nowInBookingTimeZone)
+                {
+                    return BadRequest(new { error = "Please select a booking time in the future." });
+                }
 
-            if (!availability.Available)
-            {
-                return Conflict(new { error = "That time slot is no longer available. Please pick another." });
+                bookingEnd = request.BookingStart.Value.AddMinutes(request.DurationMinutes);
+
+                var availability = await _iCloudCalendarService.CheckAvailabilityAsync(
+                    request.ClientApiKey,
+                    request.BookingStart.Value,
+                    bookingEnd.Value);
+
+                if (!availability.Available)
+                {
+                    return Conflict(new { error = "That time slot is no longer available. Please pick another." });
+                }
             }
 
             var orderId = Guid.NewGuid().ToString();
@@ -137,8 +145,8 @@ public class PaymentsController : ControllerBase
                 Amount = order.Amount,
                 Currency = order.Currency,
                 YocoStatus = yocoStatus,
-                BookingStart = order.BookingStart!.Value,
-                BookingEnd = order.BookingEnd!.Value
+                BookingStart = order.BookingStart,
+                BookingEnd = order.BookingEnd
             });
         }
         catch (ArgumentException ex)

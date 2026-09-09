@@ -9,6 +9,10 @@ import { FormField } from './FormField'
 
 const BOOKING_DURATION_MINUTES = 60
 
+// Calendar slot selection is built and working (see useAvailableSlots, BookingsController)
+// but hidden from visitors for now — flip this to re-enable the date/time picker.
+const CALENDAR_BOOKING_ENABLED = false
+
 interface FormState {
   serviceId: string
   name: string
@@ -61,10 +65,12 @@ function validate(values: FormState, selectedSlotStart: string | null): Errors {
   } else if (!emailPattern.test(values.email.trim())) {
     errors.email = 'Please enter a valid email address.'
   }
-  if (!values.bookingDate) {
-    errors.bookingDate = 'Please choose a date.'
-  } else if (!selectedSlotStart) {
-    errors.slot = 'Please choose an available time.'
+  if (CALENDAR_BOOKING_ENABLED) {
+    if (!values.bookingDate) {
+      errors.bookingDate = 'Please choose a date.'
+    } else if (!selectedSlotStart) {
+      errors.slot = 'Please choose an available time.'
+    }
   }
   return errors
 }
@@ -97,7 +103,8 @@ export function BookingForm() {
       : selectedService.costPerHour
     : 0
 
-  const bookingDateObject = values.bookingDate ? new Date(`${values.bookingDate}T00:00:00`) : null
+  const bookingDateObject =
+    CALENDAR_BOOKING_ENABLED && values.bookingDate ? new Date(`${values.bookingDate}T00:00:00`) : null
   const {
     slots,
     status: slotsStatus,
@@ -118,7 +125,8 @@ export function BookingForm() {
     event.preventDefault()
     const validationErrors = validate(values, selectedSlotStart)
     setErrors(validationErrors)
-    if (Object.keys(validationErrors).length > 0 || !selectedService || !selectedSlotStart) return
+    if (Object.keys(validationErrors).length > 0 || !selectedService) return
+    if (CALENDAR_BOOKING_ENABLED && !selectedSlotStart) return
 
     void createCheckout({
       serviceId: selectedService.serviceId,
@@ -126,8 +134,9 @@ export function BookingForm() {
       surname: values.surname.trim(),
       email: values.email.trim(),
       amount: amountDue,
-      bookingStart: selectedSlotStart,
-      durationMinutes: BOOKING_DURATION_MINUTES,
+      ...(CALENDAR_BOOKING_ENABLED && selectedSlotStart
+        ? { bookingStart: selectedSlotStart, durationMinutes: BOOKING_DURATION_MINUTES }
+        : {}),
     })
   }
 
@@ -139,12 +148,13 @@ export function BookingForm() {
   }
 
   if (status === 'success' && result) {
-    const [bookingDatePart] = result.bookingStart.split('T')
-    const bookingDateLabel = new Date(`${bookingDatePart}T00:00:00`).toLocaleDateString('en-ZA', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    })
+    const bookingDateLabel = result.bookingStart
+      ? new Date(`${result.bookingStart.split('T')[0]}T00:00:00`).toLocaleDateString('en-ZA', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+        })
+      : null
 
     return (
       <div
@@ -168,14 +178,17 @@ export function BookingForm() {
           <p className="mt-1 font-mono text-lg font-semibold text-mist-50">{result.orderId}</p>
         </div>
 
-        <div className="flex items-center gap-2 text-sm font-medium text-mist-100">
-          <Clock className="size-4 text-emerald-glow" aria-hidden="true" />
-          {bookingDateLabel} at {formatSlotTime(result.bookingStart)}
-        </div>
+        {bookingDateLabel && result.bookingStart && (
+          <div className="flex items-center gap-2 text-sm font-medium text-mist-100">
+            <Clock className="size-4 text-emerald-glow" aria-hidden="true" />
+            {bookingDateLabel} at {formatSlotTime(result.bookingStart)}
+          </div>
+        )}
 
         <p className="max-w-sm text-sm leading-relaxed text-mist-200/70">
-          Your time slot is reserved once payment is confirmed. Amount due: {currencyFormatter.format(result.amount)}{' '}
-          {result.currency}. A confirmation email with these details has been sent to {values.email}.
+          {bookingDateLabel ? 'Your time slot is reserved once payment is confirmed. ' : ''}
+          Amount due: {currencyFormatter.format(result.amount)} {result.currency}. A confirmation email with these
+          details has been sent to {values.email}.
         </p>
 
         {result.paymentUrl && (
@@ -236,21 +249,23 @@ export function BookingForm() {
         </p>
       )}
 
-      <FormField label="Date" htmlFor="bookingDate" error={errors.bookingDate}>
-        <input
-          id="bookingDate"
-          name="bookingDate"
-          type="date"
-          min={todayDateString()}
-          value={values.bookingDate}
-          onChange={(e) => handleDateChange(e.target.value)}
-          aria-invalid={Boolean(errors.bookingDate)}
-          aria-describedby={errors.bookingDate ? 'bookingDate-error' : undefined}
-          className={inputClasses(Boolean(errors.bookingDate))}
-        />
-      </FormField>
+      {CALENDAR_BOOKING_ENABLED && (
+        <FormField label="Date" htmlFor="bookingDate" error={errors.bookingDate}>
+          <input
+            id="bookingDate"
+            name="bookingDate"
+            type="date"
+            min={todayDateString()}
+            value={values.bookingDate}
+            onChange={(e) => handleDateChange(e.target.value)}
+            aria-invalid={Boolean(errors.bookingDate)}
+            aria-describedby={errors.bookingDate ? 'bookingDate-error' : undefined}
+            className={inputClasses(Boolean(errors.bookingDate))}
+          />
+        </FormField>
+      )}
 
-      {values.bookingDate && (
+      {CALENDAR_BOOKING_ENABLED && values.bookingDate && (
         <FormField label="Available Times" htmlFor="bookingSlot" error={errors.slot}>
           {slotsStatus === 'loading' && (
             <p className="flex items-center gap-2 text-xs text-mist-200/60">

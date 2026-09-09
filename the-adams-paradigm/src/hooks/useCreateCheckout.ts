@@ -8,8 +8,10 @@ export interface CreateCheckoutRequest {
   surname: string
   email: string
   amount: number
-  bookingStart: string
-  durationMinutes: number
+  // Omitted while calendar booking is hidden in the UI — see BookingForm.tsx's
+  // CALENDAR_BOOKING_ENABLED flag.
+  bookingStart?: string
+  durationMinutes?: number
 }
 
 export interface CreateCheckoutResponse {
@@ -19,8 +21,8 @@ export interface CreateCheckoutResponse {
   amount: number
   currency: string
   yocoStatus: string | null
-  bookingStart: string
-  bookingEnd: string
+  bookingStart: string | null
+  bookingEnd: string | null
 }
 
 type Status = 'idle' | 'submitting' | 'success' | 'error'

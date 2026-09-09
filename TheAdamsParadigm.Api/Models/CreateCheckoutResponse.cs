@@ -14,8 +14,8 @@ namespace TheAdamsParadigm.Api.Models
 
         public string? YocoStatus { get; set; }
 
-        public DateTime BookingStart { get; set; }
+        public DateTime? BookingStart { get; set; }
 
-        public DateTime BookingEnd { get; set; }
+        public DateTime? BookingEnd { get; set; }
     }
 }

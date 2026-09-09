@@ -12,7 +12,9 @@
 
         public string Email { get; set; } = string.Empty;
 
-        public DateTime BookingStart { get; set; }
+        // Optional — omitted while calendar booking is hidden in the UI. See
+        // BookingForm.tsx's CALENDAR_BOOKING_ENABLED flag.
+        public DateTime? BookingStart { get; set; }
 
         public int DurationMinutes { get; set; } = 60;
 
