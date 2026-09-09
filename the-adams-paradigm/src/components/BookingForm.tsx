@@ -1,5 +1,5 @@
 import { type FormEvent, useMemo, useState } from 'react'
-import { AlertCircle, CalendarCheck, Clock, ExternalLink, Loader2, X } from 'lucide-react'
+import { AlertCircle, CalendarCheck, Clock, ExternalLink, Info, Loader2, X } from 'lucide-react'
 import { useAvailableSlots } from '../hooks/useAvailableSlots'
 import { useCreateCheckout } from '../hooks/useCreateCheckout'
 import { useServices } from '../hooks/useServices'
@@ -402,6 +402,12 @@ export function BookingForm() {
               </span>
             </button>
           </div>
+
+          <p className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-mist-200/60">
+            <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+            Hourly Rate billing is for ongoing work on a website or project that's already part of The Adams
+            Paradigm ecosystem. Starting something new? Choose Setup Fee.
+          </p>
         </FormField>
       )}
 
