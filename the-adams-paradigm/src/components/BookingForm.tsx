@@ -8,6 +8,7 @@ import { inputClasses } from '../lib/formStyles'
 import { FormField } from './FormField'
 
 const BOOKING_DURATION_MINUTES = 60
+const MAX_HOURLY_HOURS = 10
 
 // Calendar slot selection is built and working (see useAvailableSlots, BookingsController)
 // but hidden from visitors for now — flip this to re-enable the date/time picker.
@@ -88,6 +89,7 @@ export function BookingForm() {
   const [values, setValues] = useState<FormState>(initialState)
   const [errors, setErrors] = useState<Errors>({})
   const [paymentType, setPaymentType] = useState<PaymentType>('setup')
+  const [hours, setHours] = useState(1)
   const [selectedSlotStart, setSelectedSlotStart] = useState<string | null>(null)
 
   const bookableServices = useMemo(() => services.filter((service) => service.isBookable), [services])
@@ -100,7 +102,7 @@ export function BookingForm() {
   const amountDue = selectedService
     ? paymentType === 'setup'
       ? selectedService.setupFee
-      : selectedService.costPerHour
+      : selectedService.costPerHour * hours
     : 0
 
   const bookingDateObject =
@@ -143,6 +145,7 @@ export function BookingForm() {
   const resetForm = () => {
     setValues(initialState)
     setPaymentType('setup')
+    setHours(1)
     setSelectedSlotStart(null)
     reset()
   }
@@ -221,6 +224,7 @@ export function BookingForm() {
             setField('serviceId', e.target.value)
             const service = bookableServices.find((s) => s.serviceId === Number(e.target.value))
             setPaymentType(service && service.setupFee <= 0 ? 'hourly' : 'setup')
+            setHours(1)
           }}
           disabled={servicesLoading || Boolean(servicesError)}
           aria-invalid={Boolean(errors.serviceId)}
@@ -408,6 +412,24 @@ export function BookingForm() {
             Hourly Rate billing is for ongoing work on a website or project that's already part of The Adams
             Paradigm ecosystem. Starting something new? Choose Setup Fee.
           </p>
+        </FormField>
+      )}
+
+      {selectedService && paymentType === 'hourly' && (
+        <FormField label="Number of Hours" htmlFor="hours">
+          <select
+            id="hours"
+            name="hours"
+            value={hours}
+            onChange={(e) => setHours(Number(e.target.value))}
+            className={inputClasses(false)}
+          >
+            {Array.from({ length: MAX_HOURLY_HOURS }, (_, i) => i + 1).map((hourOption) => (
+              <option key={hourOption} value={hourOption}>
+                {hourOption} {hourOption === 1 ? 'hour' : 'hours'} — {currencyFormatter.format(selectedService.costPerHour * hourOption)}
+              </option>
+            ))}
+          </select>
         </FormField>
       )}
 
