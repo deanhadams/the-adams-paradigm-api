@@ -22,11 +22,13 @@ public class OrdersController : ControllerBase
         var orders = await _context.Orders
             .AsNoTracking()
             .Where(o => o.Email == email)
+            .OrderByDescending(o => o.CreatedAt)
             .Select(o => new OrderSummary
             {
                 OrderNumber = o.OrderId,
                 PaymentLink = o.PaymentLink,
-                PaymentStatus = o.Status
+                PaymentStatus = o.Status,
+                CreatedAt = o.CreatedAt
             })
             .ToListAsync();
 

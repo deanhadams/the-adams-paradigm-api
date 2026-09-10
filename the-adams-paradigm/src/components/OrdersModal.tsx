@@ -11,6 +11,14 @@ interface OrdersModalProps {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+const dateFormatter = new Intl.DateTimeFormat('en-ZA', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
 function statusClasses(status: string): string {
   const normalized = status.toLowerCase()
   if (normalized === 'paid') return 'border-emerald-glow/30 bg-emerald-glow/[0.08] text-emerald-glow'
@@ -134,6 +142,7 @@ export function OrdersModal({ onClose }: OrdersModalProps) {
                   <thead>
                     <tr className="border-b border-white/10 bg-navy-950/60 text-xs font-semibold uppercase tracking-[0.15em] text-mist-200/50">
                       <th className="px-4 py-3">Order Number</th>
+                      <th className="px-4 py-3">Date Booked</th>
                       <th className="px-4 py-3">Status</th>
                       <th className="px-4 py-3">Payment</th>
                     </tr>
@@ -142,6 +151,9 @@ export function OrdersModal({ onClose }: OrdersModalProps) {
                     {orders.map((order) => (
                       <tr key={order.orderNumber} className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.02]">
                         <td className="px-4 py-3 font-mono text-xs text-mist-100/90">{order.orderNumber}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-mist-200/80">
+                          {dateFormatter.format(new Date(order.createdAt))}
+                        </td>
                         <td className="px-4 py-3">
                           <span
                             className={cn(

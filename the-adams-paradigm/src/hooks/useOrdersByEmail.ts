@@ -5,6 +5,7 @@ export interface Order {
   orderNumber: string
   paymentLink: string | null
   paymentStatus: string
+  createdAt: string
 }
 
 type Status = 'idle' | 'loading' | 'success' | 'error'

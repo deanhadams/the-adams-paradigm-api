@@ -7,5 +7,7 @@ namespace TheAdamsParadigm.Api.Models
         public string? PaymentLink { get; set; }
 
         public string PaymentStatus { get; set; } = string.Empty;
+
+        public DateTime CreatedAt { get; set; }
     }
 }
