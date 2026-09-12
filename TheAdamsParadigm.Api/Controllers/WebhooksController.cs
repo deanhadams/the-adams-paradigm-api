@@ -58,7 +58,7 @@ public class WebhooksController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(webhookSecret))
         {
-            Console.WriteLine("Yoco webhook secret is missing.");
+            _logger.LogError("Yoco webhook secret is missing from configuration.");
             return StatusCode(500, new
             {
                 error = "Yoco webhook secret is not configured."
@@ -73,7 +73,11 @@ public class WebhooksController : ControllerBase
             string.IsNullOrWhiteSpace(webhookTimestamp) ||
             string.IsNullOrWhiteSpace(webhookSignature))
         {
-            Console.WriteLine("Yoco webhook is missing required signature headers.");
+            _logger.LogWarning(
+                "Yoco webhook is missing required signature headers. webhook-id present: {HasId}, webhook-timestamp present: {HasTimestamp}, webhook-signature present: {HasSignature}",
+                !string.IsNullOrWhiteSpace(webhookId),
+                !string.IsNullOrWhiteSpace(webhookTimestamp),
+                !string.IsNullOrWhiteSpace(webhookSignature));
             return Unauthorized();
         }
 
@@ -248,19 +252,13 @@ public class WebhooksController : ControllerBase
         }
         catch (WebhookVerificationException ex)
         {
-            Console.WriteLine("================================");
-            Console.WriteLine("INVALID YOCO WEBHOOK");
-            Console.WriteLine($"Error: {ex.Message}");
-            Console.WriteLine("================================");
+            _logger.LogError(ex, "Invalid Yoco webhook signature. Body: {Body}", body);
 
             return Unauthorized();
         }
         catch (JsonException ex)
         {
-            Console.WriteLine("================================");
-            Console.WriteLine("INVALID YOCO WEBHOOK JSON");
-            Console.WriteLine($"Error: {ex.Message}");
-            Console.WriteLine("================================");
+            _logger.LogError(ex, "Failed to deserialize Yoco webhook payload. Body: {Body}", body);
 
             return BadRequest(new
             {
@@ -269,10 +267,7 @@ public class WebhooksController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine("================================");
-            Console.WriteLine("YOCO WEBHOOK PROCESSING ERROR");
-            Console.WriteLine($"Error: {ex.Message}");
-            Console.WriteLine("================================");
+            _logger.LogError(ex, "Unexpected error processing Yoco webhook. Inner exception: {InnerException}. Body: {Body}", ex.InnerException, body);
 
             return StatusCode(500, new
             {

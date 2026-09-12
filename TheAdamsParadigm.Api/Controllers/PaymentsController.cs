@@ -155,6 +155,8 @@ public class PaymentsController : ControllerBase
         }
         catch (HttpRequestException ex)
         {
+            _logger.LogError(ex, "Yoco checkout request failed. Details: {Details}", ex.Message);
+
             return StatusCode(502, new
             {
                 error = "Yoco API error",
@@ -170,6 +172,15 @@ public class PaymentsController : ControllerBase
             return StatusCode(502, new
             {
                 error = "Booking calendar is currently unavailable. Please try again shortly."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while creating Yoco checkout. Inner exception: {InnerException}", ex.InnerException);
+
+            return StatusCode(500, new
+            {
+                error = "Payment internal error."
             });
         }
     }
@@ -188,7 +199,18 @@ public class PaymentsController : ControllerBase
         }
         catch (HttpRequestException ex)
         {
+            _logger.LogError(ex, "Yoco webhook registration request failed. Details: {Details}", ex.Message);
+
             return StatusCode(502, new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while registering Yoco webhook. Inner exception: {InnerException}", ex.InnerException);
+
+            return StatusCode(500, new
+            {
+                error = "Payment internal error."
+            });
         }
     }
 
