@@ -24,6 +24,15 @@ public class BookingsController : ControllerBase
         _bookingSettings = bookingSettings.Value;
     }
 
+    [HttpGet("status")]
+    public ActionResult<object> GetStatus()
+    {
+        return Ok(new
+        {
+            enabled = _bookingSettings.Enabled
+        });
+    }
+
     [HttpGet("available-slots")]
     public async Task<IActionResult> GetAvailableSlots(
         [FromQuery] DateTime date,

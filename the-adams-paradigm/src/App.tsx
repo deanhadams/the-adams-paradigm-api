@@ -1,5 +1,6 @@
 import { AiChat } from './components/AiChat'
 import { useAiStatus } from './hooks/useAiStatus'
+import { useBookingStatus } from './hooks/useBookingStatus'
 import { Navbar } from './components/Navbar'
 import { Footer } from './components/Footer'
 import { Hero } from './sections/Hero'
@@ -17,6 +18,7 @@ import { Contact } from './sections/Contact'
 
 function App() {
   const isAiOnline = useAiStatus()
+  const isBookingEnabled = useBookingStatus()
 
   return (
     <>
@@ -25,7 +27,7 @@ function App() {
         <Hero />
         <CapabilityStrip />
         <Services />
-        <Booking />
+        {isBookingEnabled && <Booking />}
         <Skills />
         <Projects />
         <FeaturedProject />

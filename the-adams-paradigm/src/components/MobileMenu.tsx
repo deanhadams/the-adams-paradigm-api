@@ -1,4 +1,3 @@
-import { navLinks } from '../data/site'
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll'
 import { cn } from '../lib/cn'
 import { Button } from './Button'
@@ -6,10 +5,11 @@ import { Button } from './Button'
 interface MobileMenuProps {
   open: boolean
   activeId: string
+  navLinks: readonly { label: string; href: string }[]
   onClose: () => void
 }
 
-export function MobileMenu({ open, activeId, onClose }: MobileMenuProps) {
+export function MobileMenu({ open, activeId, navLinks, onClose }: MobileMenuProps) {
   useLockBodyScroll(open)
 
   return (

@@ -1,17 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Menu, X } from 'lucide-react'
 import { navLinks, site } from '../data/site'
+import { useBookingStatus } from '../hooks/useBookingStatus'
 import { useScrollSpy } from '../hooks/useScrollSpy'
 import { cn } from '../lib/cn'
 import { Button } from './Button'
 import { Logo } from './Logo'
 import { MobileMenu } from './MobileMenu'
 
-const sectionIds = navLinks.map((link) => link.href.replace('#', ''))
-
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const isBookingEnabled = useBookingStatus()
+
+  const visibleNavLinks = useMemo(
+    () => navLinks.filter((link) => isBookingEnabled || link.href !== '#booking'),
+    [isBookingEnabled],
+  )
+  const sectionIds = useMemo(
+    () => visibleNavLinks.map((link) => link.href.replace('#', '')),
+    [visibleNavLinks],
+  )
   const activeId = useScrollSpy(sectionIds)
 
   useEffect(() => {
@@ -41,7 +50,7 @@ export function Navbar() {
           </a>
 
           <ul className="hidden items-center gap-1 lg:flex">
-            {navLinks.map((link) => {
+            {visibleNavLinks.map((link) => {
               const isActive = activeId === link.href.replace('#', '')
               return (
                 <li key={link.href}>
@@ -81,7 +90,12 @@ export function Navbar() {
         </nav>
       </header>
 
-      <MobileMenu open={mobileOpen} activeId={activeId} onClose={() => setMobileOpen(false)} />
+      <MobileMenu
+        open={mobileOpen}
+        activeId={activeId}
+        navLinks={visibleNavLinks}
+        onClose={() => setMobileOpen(false)}
+      />
     </>
   )
 }
