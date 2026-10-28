@@ -47,7 +47,12 @@ export function Footer() {
         </div>
 
         <div className="mt-14 flex flex-col gap-4 border-t border-white/5 pt-8 text-xs text-mist-200/40 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 {site.name}. All rights reserved.</p>
+          <p>
+            © 2026 {site.name}. All rights reserved. ·{' '}
+            <a href="/terms" className="transition-colors hover:text-emerald-glow">
+              Terms and Conditions
+            </a>
+          </p>
           <p className="font-medium uppercase tracking-[0.2em]">{site.tagline}</p>
         </div>
       </div>

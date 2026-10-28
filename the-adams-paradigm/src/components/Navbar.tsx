@@ -14,11 +14,11 @@ export function Navbar() {
   const isBookingEnabled = useBookingStatus()
 
   const visibleNavLinks = useMemo(
-    () => navLinks.filter((link) => isBookingEnabled || link.href !== '#booking'),
+    () => navLinks.filter((link) => isBookingEnabled || link.href !== '/#booking'),
     [isBookingEnabled],
   )
   const sectionIds = useMemo(
-    () => visibleNavLinks.map((link) => link.href.replace('#', '')),
+    () => visibleNavLinks.map((link) => link.href.split('#')[1] ?? ''),
     [visibleNavLinks],
   )
   const activeId = useScrollSpy(sectionIds)
@@ -45,13 +45,13 @@ export function Navbar() {
           )}
           aria-label="Primary"
         >
-          <a href="#home" className="group shrink-0" aria-label={`${site.name} — home`}>
+          <a href="/#home" className="group shrink-0" aria-label={`${site.name} — home`}>
             <Logo />
           </a>
 
           <ul className="hidden items-center gap-1 lg:flex">
             {visibleNavLinks.map((link) => {
-              const isActive = activeId === link.href.replace('#', '')
+              const isActive = activeId === link.href.split('#')[1]
               return (
                 <li key={link.href}>
                   <a
@@ -73,7 +73,7 @@ export function Navbar() {
           </ul>
 
           <div className="hidden lg:block">
-            <Button href="#contact" variant="primary" className="px-5 py-2.5 text-sm">
+            <Button href="/#contact" variant="primary" className="px-5 py-2.5 text-sm">
               Start a Project
             </Button>
           </div>

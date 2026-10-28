@@ -206,6 +206,19 @@ export function ContactForm({ contextLabel }: ContactFormProps) {
         quote.
       </p>
 
+      <p className="text-xs text-mist-200/45">
+        By sending this message you agree to our{' '}
+        <a
+          href="/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-mist-200/70 underline underline-offset-2 hover:text-emerald-glow"
+        >
+          Terms and Conditions
+        </a>
+        .
+      </p>
+
       {status === 'error' && (
         <p className="flex items-center gap-2 text-sm font-medium text-red-400">
           <AlertCircle className="size-4 shrink-0" aria-hidden="true" />

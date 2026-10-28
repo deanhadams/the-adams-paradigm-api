@@ -464,6 +464,19 @@ export function BookingForm() {
           </>
         )}
       </button>
+
+      <p className="text-xs leading-relaxed text-mist-200/45">
+        By continuing you agree to our{' '}
+        <a
+          href="/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-mist-200/70 underline underline-offset-2 hover:text-emerald-glow"
+        >
+          Terms and Conditions
+        </a>
+        .
+      </p>
     </form>
   )
 }

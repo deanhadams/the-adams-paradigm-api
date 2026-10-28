@@ -36,7 +36,7 @@ export function MobileMenu({ open, activeId, navLinks, onClose }: MobileMenuProp
       >
         <ul className="flex flex-col divide-y divide-white/5">
           {navLinks.map((link) => {
-            const isActive = activeId === link.href.replace('#', '')
+            const isActive = activeId === link.href.split('#')[1]
             return (
               <li key={link.href}>
                 <a
@@ -54,7 +54,7 @@ export function MobileMenu({ open, activeId, navLinks, onClose }: MobileMenuProp
             )
           })}
         </ul>
-        <Button href="#contact" onClick={onClose} className="mt-6 w-full justify-center">
+        <Button href="/#contact" onClick={onClose} className="mt-6 w-full justify-center">
           Start a Project
         </Button>
       </div>
