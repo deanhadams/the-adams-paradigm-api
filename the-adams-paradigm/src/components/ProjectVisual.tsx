@@ -81,6 +81,39 @@ function GridPulsePattern({ colors }: { colors: { from: string; to: string } }) 
   )
 }
 
+function VolleyNetPattern({ colors }: { colors: { from: string; to: string } }) {
+  return (
+    <svg viewBox="0 0 300 200" className="absolute inset-0 h-full w-full opacity-80" preserveAspectRatio="none">
+      <line x1="150" y1="30" x2="150" y2="170" stroke={colors.from} strokeOpacity="0.45" strokeWidth="2" />
+      {Array.from({ length: 5 }).map((_, row) =>
+        Array.from({ length: 3 }).map((_, col) => (
+          <rect
+            key={`${row}-${col}`}
+            x={118 + col * 11}
+            y={34 + row * 11}
+            width="9"
+            height="9"
+            fill="none"
+            stroke={colors.from}
+            strokeOpacity="0.3"
+            strokeWidth="1"
+          />
+        )),
+      )}
+      <path
+        d="M30 150 Q90 40 150 100 T270 60"
+        fill="none"
+        stroke={colors.to}
+        strokeOpacity="0.5"
+        strokeWidth="1.5"
+        strokeDasharray="4 6"
+      />
+      <circle cx="30" cy="150" r="10" fill={colors.from} fillOpacity="0.9" />
+      <circle cx="270" cy="60" r="10" fill={colors.from} fillOpacity="0.4" />
+    </svg>
+  )
+}
+
 function LayeredPanelsPattern({ colors }: { colors: { from: string; to: string } }) {
   return (
     <svg viewBox="0 0 300 200" className="absolute inset-0 h-full w-full opacity-80">
@@ -96,7 +129,7 @@ function LayeredPanelsPattern({ colors }: { colors: { from: string; to: string }
 
 const patterns: Record<string, typeof PitchPattern> = {
   'complete-the-eleven-fc': PitchPattern,
-  'devil-bunny': ConstellationPattern,
+  'jellyb-rally': VolleyNetPattern,
   'world-quiz-league': GridPulsePattern,
   isyncal: LayeredPanelsPattern,
 }

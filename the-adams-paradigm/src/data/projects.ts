@@ -41,15 +41,17 @@ export const projects: Project[] = [
     },
   },
   {
-    slug: 'devil-bunny',
-    name: 'Devil Bunny',
-    category: 'Anime • Digital Universe • Creative Platform',
-    description: 'A large-scale original anime/manga universe developed into a digital experience.',
-    highlights: ['World building', 'Character systems', 'Storytelling', 'Digital presentation', 'Creative technology'],
-    tags: ['World Building', 'Content Systems', 'Digital Presentation'],
+    slug: 'jellyb-rally',
+    name: 'JellyB Rally',
+    category: 'Volleyball • Arcade Game • Browser Game',
+    description:
+      'A browser-based 2D volleyball game starring giant jelly bean characters, playable with touch or mouse in an upright-phone layout. Score a point whenever the ball touches your opponent\'s ground.',
+    // TODO: tech stack unconfirmed — replace with the actual stack (engine/framework) once known.
+    highlights: ['2D game physics', 'Touch & mouse controls', 'Upright mobile layout', 'Score-based gameplay'],
+    tags: ['Game', 'Browser', '2D'],
     accent: 'blue',
-    url: 'https://devil-bunny-official-series.ai.studio/',
-    image: 'https://pub-26d0794de3654ed6a3b6ada1126ee4b0.r2.dev/projects/devil-bunny-site.png',
+    url: 'https://jelly-b-rally.vercel.app/',
+    image: 'https://pub-26d0794de3654ed6a3b6ada1126ee4b0.r2.dev/projects/jellyb-rally.png',
   },
   {
     slug: 'world-quiz-league',

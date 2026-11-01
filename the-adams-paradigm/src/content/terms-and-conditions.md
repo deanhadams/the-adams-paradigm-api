@@ -106,7 +106,7 @@ We may suspend or end your access to the website or a service if you breach thes
 
 ## 17. Governing law and disputes
 
-These terms are governed by the laws of the Republic of South Africa. We will first try to resolve any dispute informally by talking to you. If that fails, the courts of [province or division, e.g. the Western Cape] have jurisdiction, and you may also approach the National Consumer Commission or the consumer protection body that applies to you.
+These terms are governed by the laws of the Republic of South Africa. We will first try to resolve any dispute informally by talking to you. If that fails, the courts of the Western Cape have jurisdiction, and you may also approach the National Consumer Commission or the consumer protection body that applies to you.
 
 ## 18. Contact us
 
