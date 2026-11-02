@@ -7,6 +7,7 @@ using TheAdamsParadigm.Api.Configuration;
 using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Services;
 using TheAdamsParadigm.Api.Services.CloudCalendarService;
+using TheAdamsParadigm.Api.Services.Paystack;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,7 +45,14 @@ builder.Services.AddSingleton<ClientCredentialProtector>();
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml");
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
+});
 
 const string FrontendCorsPolicy = "FrontendCorsPolicy";
 builder.Services.AddCors(options =>
@@ -81,6 +89,24 @@ builder.Services.AddHttpClient<YocoService>(client =>
 {
     client.BaseAddress = new Uri("https://payments.yoco.com/");
 });
+
+// Paystack runs alongside Yoco. Its settings are validated on first use (not here), so
+// the app — and Yoco — still start when no Paystack environment variables are set.
+builder.Services.Configure<PaystackSettings>(
+    builder.Configuration.GetSection("Paystack"));
+
+builder.Services.AddHttpClient<IPaystackService, PaystackService>((sp, client) =>
+{
+    var baseUrl = sp.GetRequiredService<IOptions<PaystackSettings>>().Value.BaseUrl;
+    if (string.IsNullOrWhiteSpace(baseUrl))
+    {
+        baseUrl = PaystackSettings.DefaultBaseUrl;
+    }
+
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+});
+
+builder.Services.AddScoped<PaystackPaymentProcessor>();
 
 builder.Services.AddSingleton<ProcessedWebhookStore>();
 builder.Services.AddHttpClient<ICloudCalendarService>();

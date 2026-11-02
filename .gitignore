@@ -10,3 +10,5 @@
 /TheAdamsParadigm.Api/bin/Release/net8.0
 /TheAdamsParadigm.Api/appsettings.Development.json
 /the-adams-paradigm/.env
+/TheAdamsParadigm.Api.Tests/bin
+/TheAdamsParadigm.Api.Tests/obj
