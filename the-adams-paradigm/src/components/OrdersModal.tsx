@@ -165,7 +165,16 @@ export function OrdersModal({ onClose }: OrdersModalProps) {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          {order.paymentLink ? (
+                          {order.paymentStatus.toLowerCase() === 'paid' ? (
+                            <span
+                              aria-disabled="true"
+                              title="Already paid"
+                              className="inline-flex cursor-not-allowed items-center gap-1.5 text-sm font-semibold text-mist-200/40"
+                            >
+                              View link
+                              <ExternalLink className="size-3.5" aria-hidden="true" />
+                            </span>
+                          ) : order.paymentLink ? (
                             <a
                               href={order.paymentLink}
                               target="_blank"

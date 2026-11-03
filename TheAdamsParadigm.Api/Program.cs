@@ -7,6 +7,8 @@ using TheAdamsParadigm.Api.Configuration;
 using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Services;
 using TheAdamsParadigm.Api.Services.CloudCalendarService;
+using TheAdamsParadigm.Api.Filters;
+using TheAdamsParadigm.Api.Services.Payments;
 using TheAdamsParadigm.Api.Services.Paystack;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,6 +54,15 @@ builder.Services.AddSwaggerGen(options =>
     {
         options.IncludeXmlComments(xmlPath);
     }
+
+    options.AddSecurityDefinition(AdminKeyOperationFilter.SchemeId, new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Name = RequireAdminKeyAttribute.HeaderName,
+        Description = "Admin key (Admin__ApiKey) for endpoints marked as admin-only."
+    });
+    options.OperationFilter<AdminKeyOperationFilter>();
 });
 
 const string FrontendCorsPolicy = "FrontendCorsPolicy";
@@ -107,6 +118,17 @@ builder.Services.AddHttpClient<IPaystackService, PaystackService>((sp, client) =
 });
 
 builder.Services.AddScoped<PaystackPaymentProcessor>();
+
+// Which provider new checkouts use (DB setting, falling back to Payments__DefaultProvider),
+// and the shared admin key protecting the endpoint that switches it.
+builder.Services.Configure<PaymentsSettings>(
+    builder.Configuration.GetSection("Payments"));
+
+builder.Services.Configure<AdminSettings>(
+    builder.Configuration.GetSection("Admin"));
+
+builder.Services.AddScoped<PaymentProviderSettingService>();
+builder.Services.AddSingleton<ICheckoutProviderGateway, CheckoutProviderGateway>();
 
 builder.Services.AddSingleton<ProcessedWebhookStore>();
 builder.Services.AddHttpClient<ICloudCalendarService>();

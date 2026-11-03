@@ -108,12 +108,17 @@ public class PaystackPaymentProcessor
             return order.Status;
         }
 
+        // Captured as a local so EF sends it as a parameter through the column's UTC
+        // converter. Inline DateTime.UtcNow is translated by Npgsql to SQL now()
+        // (timestamptz), which can't be assigned to this timestamp-without-time-zone column.
+        var paidAt = DateTime.UtcNow;
+
         var claimed = await _context.Orders
             .Where(o => o.OrderId == order.OrderId && o.Status != StatusPaid)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(o => o.Status, StatusPaid)
                 .SetProperty(o => o.PaymentId, transaction.Id.ToString())
-                .SetProperty(o => o.PaidAt, DateTime.UtcNow),
+                .SetProperty(o => o.PaidAt, paidAt),
                 cancellationToken);
 
         await _context.Entry(order).ReloadAsync(cancellationToken);

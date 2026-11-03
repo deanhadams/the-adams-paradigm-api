@@ -21,6 +21,7 @@ namespace TheAdamsParadigm.Api.Data
         public DbSet<KnowledgeChunk> KnowledgeChunks { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
+        public DbSet<AppSetting> AppSettings { get; set; }
 
         // Npgsql rejects Kind=Utc DateTimes against "timestamp without time zone" columns;
         // strip the Kind on write and re-tag reads as UTC since that's what we always store.
@@ -139,6 +140,17 @@ namespace TheAdamsParadigm.Api.Data
                 entity.Property(e => e.ClientApiKey).HasColumnName("client_api_key").IsRequired();
 
                 entity.HasIndex(e => e.ClientApiKey).IsUnique().HasDatabaseName("idx_clients_client_api_key");
+            });
+
+            // Configure AppSetting entity
+            modelBuilder.Entity<AppSetting>(entity =>
+            {
+                entity.ToTable("app_settings");
+                entity.HasKey(e => e.Key);
+                entity.Property(e => e.Key).HasColumnName("key").ValueGeneratedNever();
+                entity.Property(e => e.Value).HasColumnName("value").IsRequired();
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasColumnType("timestamp without time zone")
+                    .HasConversion(UtcDateTimeConverter);
             });
         }
     }
