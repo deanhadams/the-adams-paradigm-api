@@ -8,6 +8,7 @@ using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Services;
 using TheAdamsParadigm.Api.Services.CloudCalendarService;
 using TheAdamsParadigm.Api.Filters;
+using TheAdamsParadigm.Api.Services.Payfast;
 using TheAdamsParadigm.Api.Services.Payments;
 using TheAdamsParadigm.Api.Services.Paystack;
 
@@ -118,6 +119,19 @@ builder.Services.AddHttpClient<IPaystackService, PaystackService>((sp, client) =
 });
 
 builder.Services.AddScoped<PaystackPaymentProcessor>();
+
+// Payfast: third provider, same pattern — settings checked on first use, not at startup.
+// The ITN source-IP check relies on UseForwardedHeaders (above) resolving the client IP
+// from the X-Forwarded-For entry Railway's edge appends.
+builder.Services.Configure<PayfastSettings>(
+    builder.Configuration.GetSection("Payfast"));
+
+builder.Services.AddHttpClient<IPayfastService, PayfastService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+
+builder.Services.AddScoped<PayfastItnProcessor>();
 
 // Which provider new checkouts use (DB setting, falling back to Payments__DefaultProvider),
 // and the shared admin key protecting the endpoint that switches it.

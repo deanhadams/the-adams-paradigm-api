@@ -14,6 +14,7 @@ using TheAdamsParadigm.Api.Controllers;
 using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Filters;
 using TheAdamsParadigm.Api.Models;
+using TheAdamsParadigm.Api.Models.Payfast;
 using TheAdamsParadigm.Api.Models.Payments;
 using TheAdamsParadigm.Api.Models.Paystack;
 using TheAdamsParadigm.Api.Services;
@@ -128,12 +129,14 @@ public class PaymentProviderSettingServiceTests
         string defaultProvider = "Yoco",
         string yocoSecret = "sk_test_yoco",
         string paystackSecret = "sk_test_paystack",
-        string paystackCallback = "https://example.test/payment/paystack-callback") =>
+        string paystackCallback = "https://example.test/payment/paystack-callback",
+        PayfastSettings? payfast = null) =>
         new(
             context,
             Options.Create(new PaymentsSettings { DefaultProvider = defaultProvider }),
             Options.Create(new YocoSettings { SecretKey = yocoSecret }),
             Options.Create(new PaystackSettings { SecretKey = paystackSecret, CallbackUrl = paystackCallback }),
+            Options.Create(payfast ?? PayfastTestData.Settings()),
             NullLogger<PaymentProviderSettingService>.Instance);
 }
 
@@ -317,7 +320,7 @@ public class PaymentProviderControllerTests
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
 
-    private class FakeGateway : ICheckoutProviderGateway
+    internal class FakeGateway : ICheckoutProviderGateway
     {
         public List<string> Calls { get; } = new();
 
@@ -345,6 +348,20 @@ public class PaymentProviderControllerTests
                 OrderNumber = "ps-order",
                 Reference = "TAP-ps-order",
                 PaymentUrl = "https://checkout.paystack.com/abc",
+                Amount = 150m,
+                Currency = "ZAR"
+            }));
+        }
+
+        public Task<IActionResult> CreatePayfastCheckoutAsync(CreateCheckoutRequest request, ControllerContext controllerContext)
+        {
+            Calls.Add("Payfast");
+            return Task.FromResult<IActionResult>(new OkObjectResult(new PayfastCheckoutResponse
+            {
+                OrderId = "pf-order",
+                OrderNumber = "pf-order",
+                ProcessUrl = "https://sandbox.payfast.co.za/eng/process",
+                Fields = new[] { new PayfastFormField("m_payment_id", "pf-order"), new PayfastFormField("signature", "abc") },
                 Amount = 150m,
                 Currency = "ZAR"
             }));

@@ -205,6 +205,10 @@ namespace TheAdamsParadigm.Api.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("paid_at");
 
+                    b.Property<string>("PayfastPaymentId")
+                        .HasColumnType("text")
+                        .HasColumnName("payfast_payment_id");
+
                     b.Property<string>("PaymentId")
                         .HasColumnType("text")
                         .HasColumnName("payment_id");

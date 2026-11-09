@@ -13,6 +13,8 @@ public interface ICheckoutProviderGateway
     Task<IActionResult> CreateYocoCheckoutAsync(CreateCheckoutRequest request, ControllerContext controllerContext);
 
     Task<IActionResult> CreatePaystackCheckoutAsync(CreateCheckoutRequest request, ControllerContext controllerContext);
+
+    Task<IActionResult> CreatePayfastCheckoutAsync(CreateCheckoutRequest request, ControllerContext controllerContext);
 }
 
 public class CheckoutProviderGateway : ICheckoutProviderGateway
@@ -27,6 +29,13 @@ public class CheckoutProviderGateway : ICheckoutProviderGateway
     public Task<IActionResult> CreatePaystackCheckoutAsync(CreateCheckoutRequest request, ControllerContext controllerContext)
     {
         var controller = ActivatorUtilities.CreateInstance<PaystackPaymentsController>(controllerContext.HttpContext.RequestServices);
+        controller.ControllerContext = controllerContext;
+        return controller.CreateCheckout(request, controllerContext.HttpContext.RequestAborted);
+    }
+
+    public Task<IActionResult> CreatePayfastCheckoutAsync(CreateCheckoutRequest request, ControllerContext controllerContext)
+    {
+        var controller = ActivatorUtilities.CreateInstance<PayfastPaymentsController>(controllerContext.HttpContext.RequestServices);
         controller.ControllerContext = controllerContext;
         return controller.CreateCheckout(request, controllerContext.HttpContext.RequestAborted);
     }

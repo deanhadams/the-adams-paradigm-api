@@ -48,6 +48,10 @@
         // echoes it in the callback redirect, verify response and webhooks.
         public string? PaystackReference { get; set; }
 
+        // Payfast's own transaction id (pf_payment_id from the ITN). Our order id is sent
+        // to Payfast as m_payment_id.
+        public string? PayfastPaymentId { get; set; }
+
         // Navigation property
         public Service? Service { get; set; }
     }
