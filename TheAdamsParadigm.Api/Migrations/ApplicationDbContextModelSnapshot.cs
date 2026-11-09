@@ -43,6 +43,26 @@ namespace TheAdamsParadigm.Api.Migrations
                     b.ToTable("DataProtectionKeys");
                 });
 
+            modelBuilder.Entity("TheAdamsParadigm.Api.Models.AppSetting", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasColumnType("text")
+                        .HasColumnName("key");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("value");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("app_settings", (string)null);
+                });
+
             modelBuilder.Entity("TheAdamsParadigm.Api.Models.Client", b =>
                 {
                     b.Property<int>("ClientId")
@@ -193,6 +213,17 @@ namespace TheAdamsParadigm.Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("payment_link");
 
+                    b.Property<string>("PaymentProvider")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("Yoco")
+                        .HasColumnName("payment_provider");
+
+                    b.Property<string>("PaystackReference")
+                        .HasColumnType("text")
+                        .HasColumnName("paystack_reference");
+
                     b.Property<int?>("ServiceId")
                         .HasColumnType("integer")
                         .HasColumnName("service_id");
@@ -214,6 +245,10 @@ namespace TheAdamsParadigm.Api.Migrations
 
                     b.HasIndex("CreatedAt")
                         .HasDatabaseName("idx_orders_created_at");
+
+                    b.HasIndex("PaystackReference")
+                        .IsUnique()
+                        .HasDatabaseName("idx_orders_paystack_reference");
 
                     b.HasIndex("ServiceId");
 

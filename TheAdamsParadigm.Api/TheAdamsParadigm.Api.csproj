@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>cf42c3a6-de27-4623-8cf6-45fcc9e7833e</UserSecretsId>
+    <!-- XML docs feed Swagger's endpoint descriptions; CS1591 (missing comments) is
+         suppressed so existing undocumented members don't produce warnings. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

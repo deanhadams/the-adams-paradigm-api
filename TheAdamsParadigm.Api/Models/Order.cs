@@ -40,6 +40,14 @@
         // later creates the calendar event has no request from the browser to read it from.
         public string? ClientApiKey { get; set; }
 
+        // "Yoco" or "Paystack" (see Models.Paystack.PaymentProviders). Existing rows were
+        // backfilled to "Yoco" by the AddPaystackPaymentProvider migration.
+        public string PaymentProvider { get; set; } = "Yoco";
+
+        // Our transaction reference sent to Paystack's /transaction/initialize; Paystack
+        // echoes it in the callback redirect, verify response and webhooks.
+        public string? PaystackReference { get; set; }
+
         // Navigation property
         public Service? Service { get; set; }
     }
