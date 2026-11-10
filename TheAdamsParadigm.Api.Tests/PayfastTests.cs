@@ -192,6 +192,17 @@ public class PayfastServiceTests
         Assert.True(service.IsValidItnSignature(PayfastService.ParseFormBody(PayfastTestData.Sign(PayfastTestData.ItnFields()))));
     }
 
+    [Fact]
+    public void ItnSignature_IgnoresWhitespaceAroundConfiguredPassphrase()
+    {
+        // e.g. a Railway variable pasted with a trailing newline: checkout trims it, so the ITN must too.
+        var settings = PayfastTestData.Settings();
+        settings.Passphrase = $"  {PayfastTestData.Passphrase}\n";
+
+        Assert.True(PayfastTestData.CreateService(settings: settings)
+            .IsValidItnSignature(PayfastService.ParseFormBody(PayfastTestData.Sign(PayfastTestData.ItnFields()))));
+    }
+
     [Theory]
     [InlineData("197.97.145.144", true)]
     [InlineData("197.97.145.159", true)]

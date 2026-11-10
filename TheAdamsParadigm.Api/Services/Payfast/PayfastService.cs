@@ -170,7 +170,9 @@ public class PayfastService : IPayfastService
             return false;
         }
 
-        var expected = Md5Hex(AppendPassphrase(BuildItnParamString(itnFields), _settings.Passphrase));
+        // Trimmed exactly as for the checkout signature, so stray whitespace in the
+        // Payfast__Passphrase variable can't make checkouts work but every ITN fail.
+        var expected = Md5Hex(AppendPassphrase(BuildItnParamString(itnFields), _settings.Passphrase.Trim()));
 
         return CryptographicOperations.FixedTimeEquals(
             Encoding.ASCII.GetBytes(expected),
