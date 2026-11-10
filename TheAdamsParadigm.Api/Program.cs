@@ -23,6 +23,12 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
+    // Railway has two proxy hops: its public edge (DataPacket IPs) appends the real
+    // client, then an internal proxy appends the edge, so X-Forwarded-For arrives as
+    // "<client>, <edge>". With the default limit of 1 the edge became RemoteIpAddress
+    // and every Payfast ITN failed the source-IP check. Anything a caller puts in
+    // X-Forwarded-For sits further left, so it still can't spoof the resolved IP.
+    options.ForwardLimit = 2;
 });
 
 // Add DbContext with PostgreSQL support
@@ -122,7 +128,7 @@ builder.Services.AddScoped<PaystackPaymentProcessor>();
 
 // Payfast: third provider, same pattern — settings checked on first use, not at startup.
 // The ITN source-IP check relies on UseForwardedHeaders (above) resolving the client IP
-// from the X-Forwarded-For entry Railway's edge appends.
+// from the X-Forwarded-For entry Railway's public edge appends (ForwardLimit = 2, above).
 builder.Services.Configure<PayfastSettings>(
     builder.Configuration.GetSection("Payfast"));
 
