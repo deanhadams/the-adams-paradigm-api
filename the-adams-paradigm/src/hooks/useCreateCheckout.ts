@@ -14,15 +14,24 @@ export interface CreateCheckoutRequest {
   durationMinutes?: number
 }
 
-export type PaymentProvider = 'Yoco' | 'Paystack'
+export type PaymentProvider = 'Yoco' | 'Paystack' | 'Payfast'
+
+export interface PaymentFormField {
+  name: string
+  value: string
+}
 
 // Normalised response from POST /api/payments/checkout. The server picks the provider
 // (an admin-only setting); the customer never chooses it.
 export interface CreateCheckoutResponse {
   provider: PaymentProvider
+  // 'redirect': open paymentUrl (Yoco, Paystack). 'form': POST fields to processUrl (Payfast).
+  action?: 'redirect' | 'form'
   orderId: string
   orderNumber: string
   paymentUrl: string | null
+  processUrl?: string | null
+  fields?: PaymentFormField[] | null
   amount: number
   currency: string
   bookingStart: string | null
@@ -41,12 +50,30 @@ interface UseCreateCheckoutResult {
 
 const PAYMENT_START_ERROR = "We couldn't start your payment. Please try again in a moment or contact us."
 
+// Payfast takes the signed fields as a browser form POST. Submitting in this tab means
+// Payfast's return/cancel redirect lands back in the customer's tab.
+function submitPaymentForm(processUrl: string, fields: PaymentFormField[]) {
+  const form = document.createElement('form')
+  form.method = 'POST'
+  form.action = processUrl
+  form.style.display = 'none'
+  for (const field of fields) {
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = field.name
+    input.value = field.value
+    form.appendChild(input)
+  }
+  document.body.appendChild(form)
+  form.submit()
+}
+
 export function useCreateCheckout(): UseCreateCheckoutResult {
   const [status, setStatus] = useState<Status>('idle')
   const [result, setResult] = useState<CreateCheckoutResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Paystack redirects in this tab; if the customer comes Back and the browser restores
+  // Paystack and Payfast leave this tab; if the customer comes Back and the browser restores
   // the page from its back/forward cache, don't leave the form stuck on "Creating booking…".
   useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
@@ -72,6 +99,13 @@ export function useCreateCheckout(): UseCreateCheckoutResult {
       }
 
       const data: CreateCheckoutResponse = await response.json()
+
+      if (data.provider === 'Payfast') {
+        if (data.action !== 'form' || !data.processUrl || !data.fields?.length) throw new Error(PAYMENT_START_ERROR)
+        // Status stays 'submitting' while the browser navigates to Payfast.
+        submitPaymentForm(data.processUrl, data.fields)
+        return
+      }
 
       if (data.provider === 'Paystack') {
         if (!data.paymentUrl) throw new Error(PAYMENT_START_ERROR)

@@ -5,11 +5,12 @@ using TheAdamsParadigm.Api.Data;
 using TheAdamsParadigm.Api.Models;
 using TheAdamsParadigm.Api.Models.Payments;
 using TheAdamsParadigm.Api.Models.Paystack;
+using TheAdamsParadigm.Api.Services.Payfast;
 
 namespace TheAdamsParadigm.Api.Services.Payments;
 
 // Which provider NEW checkouts use. Stored in app_settings so it can be switched
-// instantly; falls back to Payments__DefaultProvider, then "Yoco". Orders already in
+// instantly; falls back to Payments__DefaultProvider (e.g. "Payfast"), then "Yoco". Orders already in
 // flight are unaffected — they complete on Order.PaymentProvider via their own webhook.
 public class PaymentProviderSettingService
 {
@@ -19,6 +20,7 @@ public class PaymentProviderSettingService
     private readonly PaymentsSettings _paymentsSettings;
     private readonly YocoSettings _yocoSettings;
     private readonly PaystackSettings _paystackSettings;
+    private readonly PayfastSettings _payfastSettings;
     private readonly ILogger<PaymentProviderSettingService> _logger;
 
     public PaymentProviderSettingService(
@@ -26,12 +28,14 @@ public class PaymentProviderSettingService
         IOptions<PaymentsSettings> paymentsSettings,
         IOptions<YocoSettings> yocoSettings,
         IOptions<PaystackSettings> paystackSettings,
+        IOptions<PayfastSettings> payfastSettings,
         ILogger<PaymentProviderSettingService> logger)
     {
         _context = context;
         _paymentsSettings = paymentsSettings.Value;
         _yocoSettings = yocoSettings.Value;
         _paystackSettings = paystackSettings.Value;
+        _payfastSettings = payfastSettings.Value;
         _logger = logger;
     }
 
@@ -104,6 +108,10 @@ public class PaymentProviderSettingService
         {
             if (string.IsNullOrWhiteSpace(_paystackSettings.SecretKey)) missing.Add("Paystack__SecretKey");
             if (string.IsNullOrWhiteSpace(_paystackSettings.CallbackUrl)) missing.Add("Paystack__CallbackUrl");
+        }
+        else if (provider == PaymentProviderNames.Payfast)
+        {
+            missing.AddRange(PayfastService.GetMissingConfiguration(_payfastSettings));
         }
 
         return missing;

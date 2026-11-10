@@ -73,6 +73,7 @@ namespace TheAdamsParadigm.Api.Data
                 entity.Property(e => e.ClientApiKey).HasColumnName("client_api_key");
                 entity.Property(e => e.PaymentProvider).HasColumnName("payment_provider").IsRequired().HasDefaultValue("Yoco");
                 entity.Property(e => e.PaystackReference).HasColumnName("paystack_reference");
+                entity.Property(e => e.PayfastPaymentId).HasColumnName("payfast_payment_id");
 
                 entity.HasOne(e => e.Service)
                     .WithMany(s => s.Orders)

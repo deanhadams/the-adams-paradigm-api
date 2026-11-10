@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TheAdamsParadigm.Api.Filters;
 using TheAdamsParadigm.Api.Models;
+using TheAdamsParadigm.Api.Models.Payfast;
 using TheAdamsParadigm.Api.Models.Payments;
 using TheAdamsParadigm.Api.Models.Paystack;
 using TheAdamsParadigm.Api.Services.Payments;
@@ -99,9 +100,10 @@ public class PaymentProviderController : ControllerBase
     /// </summary>
     /// <remarks>
     /// Takes the same body as <c>POST /api/payments/create-checkout</c> and runs the existing
-    /// Yoco or Paystack create-checkout logic unchanged. Error responses from that logic are
-    /// passed through as-is. For Paystack, redirect the customer to <c>paymentUrl</c> in the
-    /// same tab so they return to the callback page.
+    /// Yoco, Paystack or Payfast create-checkout logic unchanged. Error responses from that
+    /// logic are passed through as-is. <c>action</c> says what to do next: <c>redirect</c>
+    /// (open <c>paymentUrl</c>; same tab for Paystack) or <c>form</c> (Payfast: POST every
+    /// entry of <c>fields</c> as a hidden input to <c>processUrl</c> in the same tab).
     /// </remarks>
     /// <response code="200">Checkout created with the provider named in the response.</response>
     /// <response code="400">Invalid request.</response>
@@ -119,6 +121,30 @@ public class PaymentProviderController : ControllerBase
         var provider = await _settingService.GetActiveProviderAsync(cancellationToken);
 
         _logger.LogInformation("Dispatching checkout to active payment provider {Provider}", provider);
+
+        if (provider == PaymentProviderNames.Payfast)
+        {
+            var result = await _checkoutGateway.CreatePayfastCheckoutAsync(request, ControllerContext);
+
+            if (result is OkObjectResult { Value: PayfastCheckoutResponse payfast })
+            {
+                return Ok(new CheckoutResponse
+                {
+                    Provider = PaymentProviderNames.Payfast,
+                    Action = CheckoutActions.Form,
+                    OrderId = payfast.OrderId,
+                    OrderNumber = payfast.OrderNumber,
+                    ProcessUrl = payfast.ProcessUrl,
+                    Fields = payfast.Fields,
+                    Amount = payfast.Amount,
+                    Currency = payfast.Currency,
+                    BookingStart = payfast.BookingStart,
+                    BookingEnd = payfast.BookingEnd
+                });
+            }
+
+            return result;
+        }
 
         if (provider == PaymentProviders.Paystack)
         {
